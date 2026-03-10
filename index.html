@@ -3,956 +3,111 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>E-Taxes Protocol — Procesamiento Fiscal Inteligente</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet">
+<title>E-Taxes Protocol — Seguimiento de Devoluciones IVA</title>
 <style>
-:root {
-  --bg: #fafaf9;
-  --bg2: #ffffff;
-  --bg3: #f5f4f1;
-  --surface: #edecea;
-  --border: #e0dedb;
-  --border2: #ccc9c4;
-  --accent: #1a3a5c;
-  --accent2: #2a6496;
-  --accent-light: rgba(26,58,92,0.06);
-  --gold: #b8860b;
-  --gold-light: rgba(184,134,11,0.08);
-  --text: #1c1c1a;
-  --text2: #5c5a56;
-  --text3: #8a8780;
-  --green: #2d7d46;
-  --green-light: rgba(45,125,70,0.08);
-  --red: #c0392b;
-  --radius: 6px;
-  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow2: 0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06);
-  --transition: 0.2s ease;
-}
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'IBM Plex Sans', sans-serif;
-  font-weight: 400;
-  font-size: 15px;
-  line-height: 1.6;
-  min-height: 100vh;
-}
-
-/* ── NAV ──────────────────────────────────────────── */
-nav {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 40px;
-  height: 56px;
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border);
-}
-
-.nav-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.nav-mark {
-  width: 28px; height: 28px;
-  background: var(--accent);
-  border-radius: 4px;
-  display: grid;
-  place-items: center;
-}
-
-.nav-mark span {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: white;
-  font-weight: 600;
-  letter-spacing: -0.5px;
-}
-
-.nav-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 17px;
-  font-weight: 500;
-  color: var(--text);
-  letter-spacing: 0.02em;
-}
-
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.nav-badge {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  color: var(--text3);
-  padding: 3px 8px;
-  border: 1px solid var(--border);
-  border-radius: 3px;
-}
-
-.nav-status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--text3);
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.nav-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--green);
-}
-
-/* ── MAIN ─────────────────────────────────────────── */
-main {
-  padding-top: 56px;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ── HERO ─────────────────────────────────────────── */
-.hero {
-  padding: 64px 40px 48px;
-  max-width: 800px;
-  opacity: 0;
-  animation: fadeUp 0.5s 0.1s forwards;
-}
-
-.hero-tag {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  color: var(--accent2);
-  text-transform: uppercase;
-  margin-bottom: 16px;
-  font-weight: 500;
-}
-
-.hero h1 {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(32px, 4vw, 48px);
-  font-weight: 400;
-  line-height: 1.15;
-  color: var(--text);
-  margin-bottom: 16px;
-}
-
-.hero h1 strong {
-  color: var(--accent);
-  font-weight: 500;
-}
-
-.hero p {
-  font-size: 16px;
-  color: var(--text2);
-  max-width: 560px;
-  line-height: 1.7;
-  font-weight: 300;
-}
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ── DIVIDER ──────────────────────────────────────── */
-.divider {
-  height: 1px;
-  background: linear-gradient(90deg, var(--accent2), transparent 50%);
-  margin: 0 40px;
-  opacity: 0.2;
-}
-
-/* ── CONTENT AREA ─────────────────────────────────── */
-.content {
-  padding: 40px 40px 80px;
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 48px;
-  max-width: 1100px;
-  opacity: 0;
-  animation: fadeUp 0.5s 0.3s forwards;
-}
-
-/* ── STEPS ────────────────────────────────────────── */
-.steps { padding-top: 4px; }
-
-.steps-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.15em;
-  color: var(--text3);
-  text-transform: uppercase;
-  margin-bottom: 24px;
-}
-
-.step {
-  display: flex;
-  gap: 14px;
-  margin-bottom: 28px;
-  opacity: 0.4;
-  transition: opacity var(--transition);
-}
-
-.step.active { opacity: 1; }
-
-.step-num {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--accent2);
-  width: 20px;
-  flex-shrink: 0;
-  padding-top: 2px;
-  font-weight: 500;
-}
-
-.step h3 {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text);
-  margin-bottom: 4px;
-}
-
-.step p {
-  font-size: 12px;
-  color: var(--text3);
-  line-height: 1.5;
-}
-
-/* ── FORM CARD ────────────────────────────────────── */
-.card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 32px;
-  box-shadow: var(--shadow);
-}
-
-.card-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 20px;
-  font-weight: 500;
-  color: var(--text);
-  margin-bottom: 4px;
-}
-
-.card-sub {
-  font-size: 12px;
-  color: var(--text3);
-  font-family: 'JetBrains Mono', monospace;
-  margin-bottom: 28px;
-}
-
-/* Fields */
-.field { margin-bottom: 16px; }
-
-.field label {
-  display: block;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text3);
-  margin-bottom: 6px;
-  font-weight: 400;
-}
-
-.field input, .field select {
-  width: 100%;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 14px;
-  padding: 9px 12px;
-  outline: none;
-  transition: border-color var(--transition), box-shadow var(--transition);
-  border-radius: 4px;
-  -webkit-appearance: none;
-}
-
-.field select {
-  cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238a8780' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 32px;
-}
-
-.field input:focus, .field select:focus {
-  border-color: var(--accent2);
-  box-shadow: 0 0 0 2px rgba(42,100,150,0.1);
-}
-
-.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-/* Upload zones */
-.upload { margin-bottom: 16px; }
-
-.upload-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 6px;
-}
-
-.upload-head label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text3);
-}
-
-.upload-opt {
-  font-size: 10px;
-  color: var(--text3);
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.zone {
-  border: 1.5px dashed var(--border2);
-  padding: 14px;
-  cursor: pointer;
-  transition: all var(--transition);
-  position: relative;
-  background: var(--bg3);
-  border-radius: 4px;
-  text-align: center;
-}
-
-.zone:hover { border-color: var(--accent2); background: var(--accent-light); }
-
-.zone input[type="file"] {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
-  width: 100%; height: 100%;
-}
-
-.zone-icon { font-size: 18px; margin-bottom: 4px; display: block; }
-.zone-text { font-size: 12px; color: var(--text2); }
-.zone-hint { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); margin-top: 2px; }
-
-.zone.has-file { border-color: var(--green); border-style: solid; background: var(--green-light); }
-.zone.has-file .zone-icon, .zone.has-file .zone-default { display: none; }
-.file-ok { display: none; }
-.zone.has-file .file-ok { display: block; }
-.file-ok-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--green); word-break: break-all; }
-.file-ok-size { font-size: 10px; color: var(--text3); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
-
-/* Submit */
-.btn-submit {
-  width: 100%;
-  background: var(--accent);
-  color: white;
-  border: none;
-  padding: 12px 20px;
-  font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  margin-top: 24px;
-  transition: all var(--transition);
-  border-radius: 4px;
-}
-
-.btn-submit:hover { background: #15304d; box-shadow: var(--shadow2); }
-.btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
-
-/* ── PROGRESS ─────────────────────────────────────── */
-#progress-panel { display: none; }
-
-.prog-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 24px;
-}
-
-.prog-meta {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: var(--text3);
-  text-align: right;
-  line-height: 1.8;
-}
-
-#prog-jobid { color: var(--accent2); }
-
-.stages { margin-bottom: 24px; }
-
-.stage {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 13px;
-  color: var(--text3);
-  transition: color var(--transition);
-}
-
-.stage:last-child { border-bottom: none; }
-
-.stage-icon {
-  width: 22px; height: 22px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-size: 10px;
-  flex-shrink: 0;
-  transition: all var(--transition);
-}
-
-.stage-icon.pending { border: 1.5px solid var(--border2); color: var(--text3); }
-.stage-icon.running { border: 1.5px solid var(--accent2); color: var(--accent2); animation: spin 1s linear infinite; }
-.stage-icon.done { background: var(--green); color: white; border: 1.5px solid var(--green); }
-.stage-icon.error { background: var(--red); color: white; border: 1.5px solid var(--red); }
-
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-.stage.active { color: var(--text); }
-.stage.done-stage { color: var(--text2); }
-
-.log-box {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  padding: 14px;
-  height: 160px;
-  overflow-y: auto;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  line-height: 1.7;
-  border-radius: 4px;
-}
-
-.log-line { color: var(--text3); }
-.log-line.ok { color: var(--green); }
-.log-line.err { color: var(--red); }
-.log-line.info { color: var(--accent2); }
-
-/* ── RESULT ───────────────────────────────────────── */
-#result-panel { display: none; text-align: center; padding: 24px 0; }
-
-.result-icon { font-size: 40px; margin-bottom: 12px; }
-
-.result-file {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  color: var(--accent);
-  margin-bottom: 16px;
-}
-
-.btn-download {
-  display: inline-block;
-  background: var(--green);
-  color: white;
-  padding: 12px 32px;
-  font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  border-radius: 4px;
-  text-decoration: none;
-  transition: all var(--transition);
-}
-
-.btn-download:hover { background: #24693a; box-shadow: var(--shadow2); }
-
-.btn-reset {
-  display: block;
-  margin: 16px auto 0;
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--text2);
-  padding: 8px 20px;
-  font-size: 12px;
-  cursor: pointer;
-  border-radius: 4px;
-  font-family: 'IBM Plex Sans', sans-serif;
-}
-
-.btn-reset:hover { border-color: var(--text3); }
-
-/* ── ERROR ────────────────────────────────────────── */
-#error-panel { display: none; text-align: center; padding: 20px 0; }
-.error-icon { font-size: 36px; margin-bottom: 10px; }
-#error-msg { font-size: 13px; color: var(--red); }
-
-/* ── FOOTER ───────────────────────────────────────── */
-footer {
-  margin-top: auto;
-  padding: 20px 40px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 11px;
-  color: var(--text3);
-}
-
-.footer-left { font-family: 'JetBrains Mono', monospace; font-size: 10px; }
-.footer-right { font-family: 'JetBrains Mono', monospace; font-size: 10px; }
-
-/* ── RESPONSIVE ───────────────────────────────────── */
-@media (max-width: 768px) {
-  .content { grid-template-columns: 1fr; }
-  .steps { display: none; }
-  nav { padding: 0 20px; }
-  .hero { padding: 40px 20px 32px; }
-  .content { padding: 20px; }
-}
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+:root{--bg:#0e1117;--surface:#161b24;--surface2:#1e2533;--border:#2a3142;--accent:#3b82f6;--accent2:#10b981;--warn:#f59e0b;--danger:#ef4444;--text:#e2e8f0;--muted:#64748b;--purple:#a78bfa;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;}
+.topbar{background:#0a0d14;border-bottom:1px solid var(--border);padding:10px 32px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-left{display:flex;align-items:center;gap:16px;}
+.topbar-mark{width:26px;height:26px;background:var(--accent);border-radius:4px;display:grid;place-items:center;font-family:var(--mono);font-size:9px;color:white;font-weight:600;}
+.topbar-brand{font-size:14px;font-weight:600;letter-spacing:.5px;}.topbar-brand span{color:var(--accent);}
+.topbar-rfc{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;}
+.topbar-right{display:flex;align-items:center;gap:16px;}
+.topbar-badge{font-family:var(--mono);font-size:9px;color:var(--muted);padding:3px 8px;border:1px solid var(--border);border-radius:3px;letter-spacing:1px;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);animation:pulse 1.5s infinite;display:inline-block;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.hero{padding:40px 32px 28px;max-width:1200px;margin:0 auto;}
+.hero-eyebrow{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;}
+.hero-title{font-size:26px;font-weight:700;letter-spacing:-.5px;margin-bottom:4px;}.hero-title span{color:#60a5fa;}
+.hero-sub{font-size:13px;color:var(--muted);margin-bottom:28px;}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:32px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 18px;transition:border-color .15s;}.kpi:hover{border-color:var(--accent);}
+.kpi-val{font-family:var(--mono);font-size:20px;font-weight:600;margin-bottom:3px;}
+.kpi-val.blue{color:#60a5fa;}.kpi-val.green{color:#34d399;}.kpi-val.warn{color:#fbbf24;}.kpi-val.danger{color:#fb923c;}.kpi-val.purple{color:#a78bfa;}
+.kpi-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;}
+.section{max-width:1200px;margin:0 auto;padding:0 32px 40px;}
+.section-title{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.section-count{font-family:var(--mono);font-size:10px;color:var(--accent);font-weight:400;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:12px;}
+.saldo{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color .15s,transform .1s;cursor:pointer;}
+.saldo:hover{border-color:var(--accent);transform:translateY(-1px);}
+.saldo.depositado{border-left:3px solid var(--accent2);}.saldo.en-proceso{border-left:3px solid var(--accent);}.saldo.idr-pendiente{border-left:3px solid var(--warn);}.saldo.idr-urgente{border-left:3px solid var(--danger);}.saldo.preparacion{border-left:3px solid var(--purple);}
+.saldo-header{padding:14px 16px 10px;display:flex;justify-content:space-between;align-items:flex-start;}
+.saldo-periodo{font-family:var(--mono);font-size:13px;font-weight:600;}
+.saldo-status{font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:3px;letter-spacing:.5px;text-transform:uppercase;}
+.st-depositado{background:rgba(16,185,129,.15);color:#34d399;}.st-proceso{background:rgba(59,130,246,.15);color:#60a5fa;}.st-idr{background:rgba(245,158,11,.15);color:#fbbf24;}.st-urgente{background:rgba(239,68,68,.15);color:#f87171;}.st-prep{background:rgba(167,139,250,.15);color:#a78bfa;}
+.saldo-body{padding:0 16px 14px;}
+.saldo-monto{font-family:var(--mono);font-size:18px;font-weight:600;color:var(--text);margin-bottom:8px;}.saldo-monto small{font-size:11px;color:var(--muted);font-weight:400;}
+.saldo-meta{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;}
+.saldo-meta-item{display:flex;justify-content:space-between;font-size:11px;}.saldo-meta-item .lbl{color:var(--muted);}.saldo-meta-item .val{font-family:var(--mono);font-size:10px;}
+.saldo-bar{height:3px;background:var(--border);margin:10px 0 0;}.saldo-bar-fill{height:100%;border-radius:2px;transition:width .6s ease;}
+.bar-green{background:var(--accent2);}.bar-blue{background:var(--accent);}.bar-warn{background:var(--warn);}.bar-danger{background:var(--danger);}.bar-purple{background:var(--purple);}
+.detail{display:none;background:var(--surface2);border-top:1px solid var(--border);padding:14px 16px;}.detail.open{display:block;}
+.detail-title{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;}
+.detail-item{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 12px;}
+.detail-item-title{font-size:10px;color:var(--muted);margin-bottom:4px;}
+.detail-item-val{font-family:var(--mono);font-size:12px;font-weight:500;}
+.tl-item{display:flex;gap:10px;padding:6px 0;font-size:11px;border-left:2px solid var(--border);padding-left:14px;margin-left:6px;position:relative;}
+.tl-item::before{content:'';position:absolute;left:-4px;top:10px;width:6px;height:6px;border-radius:50%;background:var(--border);}
+.tl-item.done::before{background:var(--accent2);}.tl-item.active::before{background:var(--warn);box-shadow:0 0 6px var(--warn);}
+.tl-date{font-family:var(--mono);font-size:10px;color:var(--muted);width:70px;flex-shrink:0;}
+.tl-text{color:var(--text);}.tl-text.muted{color:var(--muted);}
+footer{padding:20px 32px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--muted);}
+@media(max-width:768px){.kpis{grid-template-columns:repeat(2,1fr);}.grid{grid-template-columns:1fr;}.hero{padding:24px 16px 16px;}.section{padding:0 16px 32px;}.topbar{padding:10px 16px;}}
 </style>
 </head>
 <body>
-
-<nav>
-  <div class="nav-brand">
-    <div class="nav-mark"><span>ET</span></div>
-    <span class="nav-title">E-Taxes Protocol</span>
-  </div>
-  <div class="nav-right">
-    <span class="nav-badge">v2.0</span>
-    <span class="nav-status"><span class="nav-dot"></span> Sistema activo</span>
-  </div>
-</nav>
-
-<main>
-  <section class="hero">
-    <div class="hero-tag">Procesamiento fiscal de alta precisión</div>
-    <h1>Análisis <strong>CFDI</strong> automatizado para maquiladoras</h1>
-    <p>Procesamos la información fiscal electrónica de su empresa y generamos el reporte consolidado que el SAT requiere para devoluciones de IVA. Sin instalar software. Sin riesgo de datos.</p>
-  </section>
-
-  <div class="divider"></div>
-
-  <section class="content">
-    <aside class="steps">
-      <div class="steps-label">Proceso</div>
-      <div class="step active" id="step-1">
-        <span class="step-num">01</span>
-        <div>
-          <h3>Datos de la empresa</h3>
-          <p>RFC, razón social y periodo fiscal a analizar.</p>
-        </div>
-      </div>
-      <div class="step" id="step-2">
-        <span class="step-num">02</span>
-        <div>
-          <h3>Archivos CFDI</h3>
-          <p>ZIP con los XMLs descargados del portal del SAT.</p>
-        </div>
-      </div>
-      <div class="step" id="step-3">
-        <span class="step-num">03</span>
-        <div>
-          <h3>Procesamiento</h3>
-          <p>Extracción, cruce de impuestos, conciliación automática.</p>
-        </div>
-      </div>
-      <div class="step" id="step-4">
-        <span class="step-num">04</span>
-        <div>
-          <h3>Reporte consolidado</h3>
-          <p>Excel con 18 hojas de análisis fiscal listo para descarga.</p>
-        </div>
-      </div>
-    </aside>
-
-    <div id="form-panel" class="card">
-      <div class="card-title">Nuevo análisis</div>
-      <div class="card-sub">Ingrese los datos del contribuyente</div>
-
-      <div class="field">
-        <label>RFC</label>
-        <input type="text" id="rfc" maxlength="13" placeholder="ABC1234567XY">
-      </div>
-
-      <div class="field">
-        <label>Razón social</label>
-        <input type="text" id="nombre" placeholder="Empresa SA de CV">
-      </div>
-
-      <div class="field-row">
-        <div class="field">
-          <label>Ejercicio</label>
-          <select id="anio">
-            <option value="2026">2026</option>
-            <option value="2025" selected>2025</option>
-            <option value="2024">2024</option>
-            <option value="2023">2023</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Periodo</label>
-          <select id="mes">
-            <option value="1">Enero</option><option value="2">Febrero</option>
-            <option value="3">Marzo</option><option value="4">Abril</option>
-            <option value="5">Mayo</option><option value="6">Junio</option>
-            <option value="7">Julio</option><option value="8">Agosto</option>
-            <option value="9">Septiembre</option><option value="10">Octubre</option>
-            <option value="11">Noviembre</option><option value="12">Diciembre</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="upload">
-        <div class="upload-head">
-          <label>Archivos CFDI (ZIP o XMLs)</label>
-        </div>
-        <div class="zone" id="zone-xml">
-          <input type="file" id="file-xml" accept=".zip,.xml" multiple onchange="handleFile(this,'xmls','zone-xml')">
-          <span class="zone-default">
-            <span class="zone-icon">&#128206;</span>
-            <span class="zone-text">Arrastra o selecciona archivo</span>
-            <span class="zone-hint">.zip con XMLs del SAT</span>
-          </span>
-          <div class="file-ok">
-            <div class="file-ok-name" id="xml-name"></div>
-            <div class="file-ok-size" id="xml-size"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="upload">
-        <div class="upload-head">
-          <label>Metadata SAT</label>
-          <span class="upload-opt">Opcional</span>
-        </div>
-        <div class="zone" id="zone-meta">
-          <input type="file" id="file-meta" accept=".csv" onchange="handleFile(this,'meta','zone-meta')">
-          <span class="zone-default">
-            <span class="zone-icon">&#128196;</span>
-            <span class="zone-text">_TODOMETADATA.csv</span>
-          </span>
-          <div class="file-ok">
-            <div class="file-ok-name" id="meta-name"></div>
-            <div class="file-ok-size" id="meta-size"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="upload">
-        <div class="upload-head">
-          <label>Tipos de cambio</label>
-          <span class="upload-opt">Opcional</span>
-        </div>
-        <div class="zone" id="zone-tc">
-          <input type="file" id="file-tc" accept=".csv" onchange="handleFile(this,'tc','zone-tc')">
-          <span class="zone-default">
-            <span class="zone-icon">&#128200;</span>
-            <span class="zone-text">TC.csv</span>
-          </span>
-          <div class="file-ok">
-            <div class="file-ok-name" id="tc-name"></div>
-            <div class="file-ok-size" id="tc-size"></div>
-          </div>
-        </div>
-      </div>
-
-      <button class="btn-submit" id="submit-btn" onclick="iniciarAnalisis()">Iniciar análisis →</button>
-    </div>
-
-    <!-- PROGRESS -->
-    <div id="progress-panel" class="card">
-      <div class="prog-header" id="prog-header">
-        <div>
-          <div class="card-title">Procesando</div>
-          <div class="card-sub" id="prog-empresa">—</div>
-        </div>
-        <div class="prog-meta">
-          <div id="prog-jobid">—</div>
-          <div id="prog-time">00:00</div>
-        </div>
-      </div>
-
-      <div class="stages" id="stages">
-        <div class="stage" id="stage-upload"><span class="stage-icon pending">○</span> Recepción de archivos</div>
-        <div class="stage" id="stage-xml"><span class="stage-icon pending">○</span> Extracción de XMLs</div>
-        <div class="stage" id="stage-pipeline"><span class="stage-icon pending">○</span> Motor de impuestos</div>
-        <div class="stage" id="stage-result"><span class="stage-icon pending">○</span> Generación de reporte</div>
-      </div>
-
-      <div class="log-box" id="log-box">
-        <span class="log-line info">Sistema listo.</span>
-      </div>
-
-      <div id="result-panel">
-        <div class="result-icon">&#9989;</div>
-        <div style="font-size:15px;font-weight:500;margin-bottom:4px;">Análisis completado</div>
-        <div class="result-file" id="result-filename">CONSOLIDADO.xlsx</div>
-        <a class="btn-download" id="download-link" href="#">&#8595; Descargar reporte</a>
-        <button class="btn-reset" onclick="resetForm()">Nuevo análisis</button>
-      </div>
-
-      <div id="error-panel">
-        <div class="error-icon">&#10060;</div>
-        <div id="error-msg"></div>
-        <button class="btn-reset" onclick="resetForm()">Reintentar</button>
-      </div>
-    </div>
-  </section>
-</main>
-
-<footer>
-  <span class="footer-left">E-Taxes Protocol · Procesamiento fiscal automatizado</span>
-  <span class="footer-right">Confidencial · 2026</span>
-</footer>
-
+<div class="topbar"><div class="topbar-left"><div class="topbar-mark">ET</div><span class="topbar-brand">E-Taxes <span>Protocol</span></span><span class="topbar-rfc">MPO0812157K3</span></div><div class="topbar-right"><span class="topbar-badge">SEGUIMIENTO IVA</span><span style="font-family:var(--mono);font-size:10px;color:var(--muted);display:flex;align-items:center;gap:6px;"><span class="live-dot"></span> Actualizado hoy</span></div></div>
+<div class="hero">
+<div class="hero-eyebrow">Devolución de IVA · Martek Power SA de CV</div>
+<div class="hero-title">Panel de <span>Seguimiento</span></div>
+<div class="hero-sub">Estado en tiempo real de las solicitudes de devolución de IVA ante el SAT</div>
+<div class="kpis">
+<div class="kpi"><div class="kpi-val blue">$115.8M</div><div class="kpi-lbl">IVA total pendiente</div></div>
+<div class="kpi"><div class="kpi-val green">$38.2M</div><div class="kpi-lbl">Depositado</div></div>
+<div class="kpi"><div class="kpi-val warn">$52.1M</div><div class="kpi-lbl">En proceso SAT</div></div>
+<div class="kpi"><div class="kpi-val danger">3</div><div class="kpi-lbl">IDRs por contestar</div></div>
+<div class="kpi"><div class="kpi-val purple">16</div><div class="kpi-lbl">Saldos totales</div></div>
+</div></div>
+<div class="section"><div class="section-title"><span>Saldos con requerimiento urgente</span><span class="section-count">3 saldos · plazo corriendo</span></div><div class="grid" id="g1"></div></div>
+<div class="section"><div class="section-title"><span>En proceso ante el SAT</span><span class="section-count">5 saldos · esperando resolución</span></div><div class="grid" id="g2"></div></div>
+<div class="section"><div class="section-title"><span>Depositados</span><span class="section-count">4 saldos · $38.2M recuperados</span></div><div class="grid" id="g3"></div></div>
+<div class="section"><div class="section-title"><span>En preparación</span><span class="section-count">4 saldos · armando expediente</span></div><div class="grid" id="g4"></div></div>
+<footer><span>E-Taxes Protocol · Seguimiento automatizado de devoluciones IVA</span><span>Confidencial · 2026</span></footer>
 <script>
-const FILES = { xmls: null, meta: null, tc: null };
-let JOB_ID = null, startTime, timerInterval;
-
-// ── FILE HANDLING ──────────────────────────────────────
-function handleFile(input, key, zoneId) {
-  const file = input.files[0];
-  if (!file) return;
-  FILES[key] = file;
-  const zone = document.getElementById(zoneId);
-  zone.classList.add('has-file');
-  const ids = { xmls: ['xml-name','xml-size'], meta: ['meta-name','meta-size'], tc: ['tc-name','tc-size'] };
-  document.getElementById(ids[key][0]).textContent = file.name;
-  document.getElementById(ids[key][1]).textContent = formatBytes(file.size);
-  document.getElementById('step-2').classList.add('active');
+const S=[
+{p:"2024-07",m:8420000,s:"idr-urgente",sl:"IDR urgente",sc:"st-urgente",e:"12-Ene-2025",d:58,c:24350,b:65,bc:"bar-danger",cs:"ok",ms:"ok",cb:"ok",is:"pending",ds:"ok",tl:[{dt:"12-Ene",tx:"Solicitud enviada al SAT",dn:1},{dt:"28-Ene",tx:"SAT emite IDR — 20 días hábiles",dn:1},{dt:"05-Feb",tx:"Análisis de requerimiento completado",dn:1},{dt:"10-Mar",tx:"Respuesta en preparación — 8 días restantes",ac:1},{dt:"21-Mar",tx:"Vencimiento del plazo",mu:1}]},
+{p:"2024-08",m:7150000,s:"idr-urgente",sl:"IDR urgente",sc:"st-urgente",e:"15-Ene-2025",d:55,c:22100,b:55,bc:"bar-danger",cs:"ok",ms:"ok",cb:"pending",is:"pending",ds:"ok",tl:[{dt:"15-Ene",tx:"Solicitud enviada al SAT",dn:1},{dt:"02-Feb",tx:"SAT emite IDR — conciliación bancaria",dn:1},{dt:"08-Mar",tx:"Cruce bancario en proceso",ac:1},{dt:"25-Mar",tx:"Vencimiento del plazo",mu:1}]},
+{p:"2024-09",m:6830000,s:"idr-pendiente",sl:"IDR pendiente",sc:"st-idr",e:"20-Ene-2025",d:50,c:21800,b:45,bc:"bar-warn",cs:"ok",ms:"ok",cb:"ok",is:"pending",ds:"ok",tl:[{dt:"20-Ene",tx:"Solicitud enviada al SAT",dn:1},{dt:"10-Feb",tx:"SAT emite IDR — precios de transferencia",dn:1},{dt:"01-Mar",tx:"Documentación TP solicitada a la empresa",ac:1},{dt:"02-Abr",tx:"Vencimiento del plazo",mu:1}]},
+{p:"2024-10",m:9200000,s:"en-proceso",sl:"En proceso",sc:"st-proceso",e:"01-Feb-2025",d:38,c:26400,b:80,bc:"bar-blue",cs:"ok",ms:"ok",cb:"ok",is:"na",ds:"ok",tl:[{dt:"01-Feb",tx:"Solicitud enviada al SAT",dn:1},{dt:"15-Feb",tx:"SAT acusa recibo",dn:1},{dt:"10-Mar",tx:"En revisión por el SAT — sin requerimiento",ac:1}]},
+{p:"2024-11",m:11500000,s:"en-proceso",sl:"En proceso",sc:"st-proceso",e:"10-Feb-2025",d:29,c:28900,b:75,bc:"bar-blue",cs:"ok",ms:"ok",cb:"ok",is:"na",ds:"ok",tl:[{dt:"10-Feb",tx:"Solicitud enviada",dn:1},{dt:"25-Feb",tx:"SAT acusa recibo",dn:1},{dt:"10-Mar",tx:"En período de revisión",ac:1}]},
+{p:"2024-12",m:12800000,s:"en-proceso",sl:"En proceso",sc:"st-proceso",e:"15-Feb-2025",d:24,c:31200,b:70,bc:"bar-blue",cs:"ok",ms:"ok",cb:"ok",is:"na",ds:"ok",tl:[{dt:"15-Feb",tx:"Solicitud enviada",dn:1},{dt:"01-Mar",tx:"SAT acusa recibo",dn:1},{dt:"10-Mar",tx:"Esperando resolución",ac:1}]},
+{p:"2025-01",m:9800000,s:"en-proceso",sl:"En proceso",sc:"st-proceso",e:"25-Feb-2025",d:14,c:25600,b:60,bc:"bar-blue",cs:"ok",ms:"ok",cb:"ok",is:"na",ds:"ok",tl:[{dt:"25-Feb",tx:"Solicitud enviada al SAT",dn:1},{dt:"05-Mar",tx:"SAT acusa recibo",dn:1}]},
+{p:"2025-02",m:8800000,s:"en-proceso",sl:"En proceso",sc:"st-proceso",e:"05-Mar-2025",d:5,c:23100,b:50,bc:"bar-blue",cs:"ok",ms:"ok",cb:"ok",is:"na",ds:"ok",tl:[{dt:"05-Mar",tx:"Solicitud enviada al SAT",dn:1}]},
+{p:"2024-03",m:8900000,s:"depositado",sl:"Depositado",sc:"st-depositado",e:"15-Oct-2024",d:0,c:19200,b:100,bc:"bar-green",cs:"ok",ms:"ok",cb:"ok",is:"ok",ds:"ok",tl:[{dt:"15-Oct",tx:"Solicitud enviada",dn:1},{dt:"02-Nov",tx:"IDR emitido — respondido en 5 días",dn:1},{dt:"18-Dic",tx:"SAT autoriza devolución",dn:1},{dt:"22-Dic",tx:"Depósito confirmado: $8,900,000",dn:1}]},
+{p:"2024-04",m:10200000,s:"depositado",sl:"Depositado",sc:"st-depositado",e:"01-Nov-2024",d:0,c:21500,b:100,bc:"bar-green",cs:"ok",ms:"ok",cb:"ok",is:"ok",ds:"ok",tl:[{dt:"01-Nov",tx:"Solicitud enviada",dn:1},{dt:"15-Dic",tx:"SAT autoriza sin requerimiento",dn:1},{dt:"20-Dic",tx:"Depósito confirmado: $10,200,000",dn:1}]},
+{p:"2024-05",m:9600000,s:"depositado",sl:"Depositado",sc:"st-depositado",e:"10-Nov-2024",d:0,c:22800,b:100,bc:"bar-green",cs:"ok",ms:"ok",cb:"ok",is:"ok",ds:"ok",tl:[{dt:"10-Nov",tx:"Solicitud enviada",dn:1},{dt:"05-Ene",tx:"IDR emitido — respondido en 3 días",dn:1},{dt:"20-Ene",tx:"SAT autoriza devolución",dn:1},{dt:"24-Ene",tx:"Depósito confirmado: $9,600,000",dn:1}]},
+{p:"2024-06",m:9500000,s:"depositado",sl:"Depositado",sc:"st-depositado",e:"20-Nov-2024",d:0,c:23400,b:100,bc:"bar-green",cs:"ok",ms:"ok",cb:"ok",is:"ok",ds:"ok",tl:[{dt:"20-Nov",tx:"Solicitud enviada",dn:1},{dt:"10-Ene",tx:"SAT autoriza sin requerimiento",dn:1},{dt:"15-Ene",tx:"Depósito confirmado: $9,500,000",dn:1}]},
+{p:"2025-03",m:7200000,s:"preparacion",sl:"Preparación",sc:"st-prep",e:"—",d:0,c:0,b:25,bc:"bar-purple",cs:"pending",ms:"pending",cb:"na",is:"na",ds:"pending",tl:[{dt:"10-Mar",tx:"Descarga de CFDIs en proceso",ac:1}]},
+{p:"2025-04",m:6800000,s:"preparacion",sl:"Preparación",sc:"st-prep",e:"—",d:0,c:0,b:15,bc:"bar-purple",cs:"pending",ms:"na",cb:"na",is:"na",ds:"na",tl:[{dt:"—",tx:"Pendiente de cierre contable",mu:1}]},
+{p:"2025-05",m:5200000,s:"preparacion",sl:"Preparación",sc:"st-prep",e:"—",d:0,c:0,b:10,bc:"bar-purple",cs:"na",ms:"na",cb:"na",is:"na",ds:"na",tl:[{dt:"—",tx:"Pendiente de cierre contable",mu:1}]},
+{p:"2025-06",m:6100000,s:"preparacion",sl:"Preparación",sc:"st-prep",e:"—",d:0,c:0,b:10,bc:"bar-purple",cs:"na",ms:"na",cb:"na",is:"na",ds:"na",tl:[{dt:"—",tx:"Pendiente de cierre contable",mu:1}]},
+];
+function fmt(n){return '$'+n.toLocaleString('es-MX');}
+function si(v){return v==='ok'?'<span style="color:#34d399">✓</span>':v==='pending'?'<span style="color:#fbbf24">◌</span>':'<span style="color:var(--muted)">—</span>';}
+function sl(v){return v==='ok'?'Completo':v==='pending'?'En proceso':'N/A';}
+function r(s){
+var dt=s.d>0?s.d+' días':'—',ct=s.c>0?s.c.toLocaleString():'—';
+return '<div class="saldo '+s.s+'" onclick="td(this)"><div class="saldo-header"><span class="saldo-periodo">'+s.p+'</span><span class="saldo-status '+s.sc+'">'+s.sl+'</span></div><div class="saldo-body"><div class="saldo-monto">'+fmt(s.m)+' <small>MXN</small></div><div class="saldo-meta"><div class="saldo-meta-item"><span class="lbl">Enviado</span><span class="val">'+s.e+'</span></div><div class="saldo-meta-item"><span class="lbl">Días</span><span class="val">'+dt+'</span></div><div class="saldo-meta-item"><span class="lbl">CFDIs</span><span class="val">'+ct+'</span></div><div class="saldo-meta-item"><span class="lbl">Avance</span><span class="val">'+s.b+'%</span></div></div><div class="saldo-bar"><div class="saldo-bar-fill '+s.bc+'" style="width:'+s.b+'%"></div></div></div><div class="detail"><div class="detail-title">Expediente del periodo</div><div class="detail-grid"><div class="detail-item"><div class="detail-item-title">CFDIs procesados</div><div class="detail-item-val">'+si(s.cs)+' '+sl(s.cs)+'</div></div><div class="detail-item"><div class="detail-item-title">Metadata SAT</div><div class="detail-item-val">'+si(s.ms)+' '+sl(s.ms)+'</div></div><div class="detail-item"><div class="detail-item-title">Conciliación bancaria</div><div class="detail-item-val">'+si(s.cb)+' '+(s.cb==='ok'?'Conciliado':sl(s.cb))+'</div></div><div class="detail-item"><div class="detail-item-title">Respuesta IDR</div><div class="detail-item-val">'+si(s.is)+' '+(s.is==='ok'?'Respondido':sl(s.is))+'</div></div><div class="detail-item"><div class="detail-item-title">Cruce vs declarado</div><div class="detail-item-val">'+si(s.ds)+' '+(s.ds==='ok'?'Sin discrepancias':sl(s.ds))+'</div></div></div><div style="margin-top:14px;"><div class="detail-title">Línea de tiempo</div>'+s.tl.map(function(t){return '<div class="tl-item '+(t.dn?'done':t.ac?'active':'')+'"><span class="tl-date">'+t.dt+'</span><span class="tl-text '+(t.mu?'muted':'')+'">'+t.tx+'</span></div>';}).join('')+'</div></div></div>';
 }
-
-function formatBytes(b) {
-  if (b < 1024) return b + ' B';
-  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
-  return (b/1048576).toFixed(1) + ' MB';
-}
-
-// ── VALIDATION ─────────────────────────────────────────
-function validar() {
-  if (!document.getElementById('rfc').value.trim()) { alert('Ingrese el RFC.'); return false; }
-  if (!document.getElementById('nombre').value.trim()) { alert('Ingrese la razón social.'); return false; }
-  if (!FILES.xmls) { alert('Suba el archivo ZIP con los CFDIs.'); return false; }
-  return true;
-}
-
-// ── SIMULATED ANALYSIS ─────────────────────────────────
-async function iniciarAnalisis() {
-  if (!validar()) return;
-
-  const btn = document.getElementById('submit-btn');
-  btn.disabled = true;
-  btn.textContent = 'Enviando...';
-
-  const rfc = document.getElementById('rfc').value.trim().toUpperCase();
-  const nombre = document.getElementById('nombre').value.trim().toUpperCase();
-  const anio = document.getElementById('anio').value;
-  const mes = document.getElementById('mes').value;
-
-  // Show progress
-  document.getElementById('form-panel').style.display = 'none';
-  document.getElementById('progress-panel').style.display = 'block';
-
-  JOB_ID = 'JOB-' + Date.now().toString(36).toUpperCase();
-  document.getElementById('prog-jobid').textContent = JOB_ID;
-  document.getElementById('prog-empresa').textContent = rfc + ' · ' + anio + '-' + String(mes).padStart(2,'0');
-
-  ['step-1','step-2','step-3'].forEach(id => document.getElementById(id).classList.add('active'));
-
-  startTime = Date.now();
-  timerInterval = setInterval(() => {
-    const sec = Math.floor((Date.now() - startTime) / 1000);
-    document.getElementById('prog-time').textContent =
-      String(Math.floor(sec/60)).padStart(2,'0') + ':' + String(sec%60).padStart(2,'0');
-  }, 1000);
-
-  // Try real server first, fall back to simulation
-  try {
-    const fd = new FormData();
-    fd.append('rfc', rfc);
-    fd.append('nombre', nombre);
-    fd.append('anio', anio);
-    fd.append('mes', mes);
-    fd.append('xmls', FILES.xmls, FILES.xmls.name);
-    if (FILES.meta) fd.append('metadata', FILES.meta, '_TODOMETADATA.csv');
-    if (FILES.tc) fd.append('tc', FILES.tc, 'TC.csv');
-
-    const res = await fetch('/api/upload-job', { method: 'POST', body: fd });
-    if (!res.ok) throw new Error('No server');
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    JOB_ID = data.job_id;
-    document.getElementById('prog-jobid').textContent = JOB_ID;
-    startRealPolling();
-  } catch(e) {
-    // No backend — run simulation
-    runSimulation(rfc, nombre, anio, mes);
-  }
-}
-
-// ── SIMULATION ─────────────────────────────────────────
-async function runSimulation(rfc, nombre, anio, mes) {
-  const xmlCount = FILES.xmls ? Math.floor(FILES.xmls.size / 3200) || 847 : 847;
-  const logs = [
-    { t: 400, msg: '▸ Recibiendo archivos...', stage: 'stage-upload', state: 'running' },
-    { t: 1200, msg: '✓ Archivos recibidos: ' + (FILES.xmls ? FILES.xmls.name : 'cfdi_pack.zip'), stage: 'stage-upload', state: 'done' },
-    { t: 1600, msg: '▸ Iniciando extracción de XMLs...', stage: 'stage-xml', state: 'running' },
-    { t: 2400, msg: '  cfdi_39.exe —  procesando ' + xmlCount.toLocaleString() + ' documentos', stage: null },
-    { t: 3800, msg: '  → _comprobante.csv: ' + xmlCount.toLocaleString() + ' registros', stage: null },
-    { t: 4200, msg: '  → _emisor.csv, _receptor.csv, _concepto.csv', stage: null },
-    { t: 4800, msg: '  → _impuestos_traslado.csv, _impuestos_retencion.csv', stage: null },
-    { t: 5400, msg: '  → _pagos_detalles_PPD.csv', stage: null },
-    { t: 6000, msg: '✓ ' + xmlCount.toLocaleString() + ' CFDIs extraídos → 31 CSVs generados', stage: 'stage-xml', state: 'done' },
-    { t: 6600, msg: '▸ Motor de impuestos: procesando ' + rfc, stage: 'stage-pipeline', state: 'running' },
-    { t: 7400, msg: '  [PUE] Facturas pago único: clasificando...', stage: null },
-    { t: 8200, msg: '  [PPD] Complementos de pago: cruzando con facturas origen...', stage: null },
-    { t: 9000, msg: '  [IVA] Trasladado: $' + (xmlCount * 284.5).toLocaleString('es-MX', {maximumFractionDigits:0}), stage: null },
-    { t: 9600, msg: '  [IVA] Retenido: $' + (xmlCount * 42.1).toLocaleString('es-MX', {maximumFractionDigits:0}), stage: null },
-    { t: 10200, msg: '  [ISR] Retenido: $' + (xmlCount * 18.7).toLocaleString('es-MX', {maximumFractionDigits:0}), stage: null },
-    { t: 10800, msg: '  [AMARRE] Verificando integridad fiscal...', stage: null },
-    { t: 11400, msg: '  [NO_OBJETO] Separando conceptos Art. 5-C LIVA', stage: null },
-    { t: 12000, msg: '✓ Motor completado: 18 hojas de análisis generadas', stage: 'stage-pipeline', state: 'done' },
-    { t: 12600, msg: '▸ Generando CONSOLIDADO_' + rfc + '_' + anio + '-' + String(mes).padStart(2,'0') + '.xlsx', stage: 'stage-result', state: 'running' },
-    { t: 13400, msg: '✓ Reporte listo para descarga', stage: 'stage-result', state: 'done' },
-  ];
-
-  for (const entry of logs) {
-    await new Promise(r => setTimeout(r, entry.t - (logs.indexOf(entry) > 0 ? logs[logs.indexOf(entry)-1].t : 0)));
-    appendLog(entry.msg);
-    if (entry.stage && entry.state) setStage(entry.stage, entry.state);
-  }
-
-  await new Promise(r => setTimeout(r, 800));
-  clearInterval(timerInterval);
-  document.getElementById('step-4').classList.add('active');
-  document.getElementById('log-box').style.display = 'none';
-  document.getElementById('stages').style.display = 'none';
-  document.getElementById('prog-header').style.display = 'none';
-  document.getElementById('result-panel').style.display = 'block';
-  document.getElementById('result-filename').textContent = 'CONSOLIDADO_' + rfc + '_' + anio + '-' + String(mes).padStart(2,'0') + '.xlsx';
-}
-
-// ── REAL POLLING ───────────────────────────────────────
-let pollTimer, lastLogCount = 0;
-
-function startRealPolling() {
-  pollTimer = setInterval(async () => {
-    try {
-      const res = await fetch('/api/job-status/' + JOB_ID);
-      const data = await res.json();
-      const log = data.log || [];
-      log.slice(lastLogCount).forEach(l => appendLog(l));
-      lastLogCount = log.length;
-      updateStagesFromLog(log);
-
-      if (data.status === 'done') {
-        clearInterval(pollTimer);
-        clearInterval(timerInterval);
-        setStage('stage-result', 'done');
-        document.getElementById('step-4').classList.add('active');
-        document.getElementById('log-box').style.display = 'none';
-        document.getElementById('stages').style.display = 'none';
-        document.getElementById('prog-header').style.display = 'none';
-        document.getElementById('result-panel').style.display = 'block';
-        document.getElementById('result-filename').textContent = data.result || 'CONSOLIDADO.xlsx';
-        const link = document.getElementById('download-link');
-        link.href = '/api/download/' + JOB_ID;
-        link.download = data.result || 'CONSOLIDADO.xlsx';
-      } else if (data.status === 'error') {
-        clearInterval(pollTimer);
-        clearInterval(timerInterval);
-        setStage('stage-pipeline', 'error');
-        document.getElementById('log-box').style.display = 'none';
-        document.getElementById('stages').style.display = 'none';
-        document.getElementById('error-panel').style.display = 'block';
-        document.getElementById('error-msg').textContent = data.error || 'Error en el procesamiento.';
-      }
-    } catch(e) { appendLog('⚠ Conexión perdida'); }
-  }, 2500);
-}
-
-function updateStagesFromLog(log) {
-  const t = log.join(' ').toLowerCase();
-  if (t.includes('cfdi_39') || t.includes('xmls extraidos')) setStage('stage-xml', 'running');
-  if (t.includes('csvs generados') || t.includes('pipeline principal')) { setStage('stage-xml', 'done'); setStage('stage-pipeline', 'running'); }
-  if (t.includes('consolidado listo') || t.includes('job completado')) { setStage('stage-pipeline', 'done'); setStage('stage-result', 'running'); }
-}
-
-// ── HELPERS ────────────────────────────────────────────
-function setStage(id, state) {
-  const stage = document.getElementById(id);
-  if (!stage) return;
-  const icon = stage.querySelector('.stage-icon');
-  icon.className = 'stage-icon ' + state;
-  if (state === 'running') { icon.textContent = '◌'; stage.classList.add('active'); }
-  else if (state === 'done') { icon.textContent = '✓'; stage.classList.add('done-stage'); stage.classList.remove('active'); }
-  else if (state === 'error') { icon.textContent = '✕'; }
-}
-
-function appendLog(line) {
-  const box = document.getElementById('log-box');
-  const el = document.createElement('div');
-  el.className = 'log-line';
-  const l = line.toLowerCase();
-  if (l.includes('error') || l.includes('✕')) el.className = 'log-line err';
-  else if (l.includes('✓') || l.includes('completado') || l.includes('listo')) el.className = 'log-line ok';
-  else if (l.includes('▸') || l.includes('iniciando')) el.className = 'log-line info';
-  el.textContent = line;
-  box.appendChild(el);
-  box.scrollTop = box.scrollHeight;
-}
-
-function resetForm() {
-  clearInterval(pollTimer);
-  clearInterval(timerInterval);
-  JOB_ID = null; lastLogCount = 0;
-  FILES.xmls = FILES.meta = FILES.tc = null;
-  ['zone-xml','zone-meta','zone-tc'].forEach(id => { const z = document.getElementById(id); if(z) z.classList.remove('has-file'); });
-  ['xml-name','xml-size','meta-name','meta-size','tc-name','tc-size'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = ''; });
-  ['file-xml','file-meta','file-tc'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-  ['step-2','step-3','step-4'].forEach(id => document.getElementById(id).classList.remove('active'));
-  const logBox = document.getElementById('log-box');
-  logBox.innerHTML = '<span class="log-line info">Sistema listo.</span>';
-  logBox.style.display = 'block';
-  ['stage-upload','stage-xml','stage-pipeline','stage-result'].forEach(id => {
-    const s = document.getElementById(id);
-    if(s) { s.className = 'stage'; s.querySelector('.stage-icon').className = 'stage-icon pending'; s.querySelector('.stage-icon').textContent = '○'; }
-  });
-  document.getElementById('stages').style.display = 'block';
-  document.getElementById('result-panel').style.display = 'none';
-  document.getElementById('error-panel').style.display = 'none';
-  document.getElementById('progress-panel').style.display = 'none';
-  document.getElementById('form-panel').style.display = 'block';
-  const btn = document.getElementById('submit-btn');
-  btn.disabled = false;
-  btn.textContent = 'Iniciar análisis →';
-  const ph = document.getElementById('prog-header');
-  if(ph) ph.style.display = 'flex';
-}
-
-document.getElementById('rfc').addEventListener('input', function() { this.value = this.value.toUpperCase(); });
-
-// Drag & drop
-['zone-xml','zone-meta','zone-tc'].forEach(id => {
-  const z = document.getElementById(id);
-  z.addEventListener('dragover', e => { e.preventDefault(); z.style.borderColor = 'var(--accent2)'; z.style.background = 'var(--accent-light)'; });
-  z.addEventListener('dragleave', () => { z.style.borderColor = ''; z.style.background = ''; });
-  z.addEventListener('drop', e => { e.preventDefault(); z.style.borderColor = ''; z.style.background = ''; });
-});
+function td(el){el.querySelector('.detail').classList.toggle('open');}
+document.getElementById('g1').innerHTML=S.filter(function(s){return s.s==='idr-urgente'||s.s==='idr-pendiente';}).map(r).join('');
+document.getElementById('g2').innerHTML=S.filter(function(s){return s.s==='en-proceso';}).map(r).join('');
+document.getElementById('g3').innerHTML=S.filter(function(s){return s.s==='depositado';}).map(r).join('');
+document.getElementById('g4').innerHTML=S.filter(function(s){return s.s==='preparacion';}).map(r).join('');
 </script>
 </body>
 </html>
