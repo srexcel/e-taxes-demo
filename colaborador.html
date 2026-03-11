@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Ventana del Colaborador - E‑Taxes Protocol</title>
+  <style>
+    body{
+      font-family: Arial, sans-serif;
+      margin:0;
+      padding:0;
+      background:#f9fafb;
+      color:#333;
+    }
+    header{
+      background:#0066cc;
+      color:#fff;
+      padding:10px 20px;
+    }
+    h1{
+      margin:0;
+      font-size:20px;
+    }
+    .container{
+      padding:20px;
+      max-width:800px;
+      margin:auto;
+    }
+    .task-card{
+      background:#fff;
+      border:1px solid #e0e0e0;
+      border-radius:5px;
+      padding:15px;
+      margin-bottom:15px;
+      box-shadow:0 1px 3px rgba(0,0,0,0.1);
+    }
+    .task-card h3{
+      margin-top:0;
+      margin-bottom:5px;
+    }
+    .task-card p{
+      margin:5px 0;
+    }
+    .task-card button{
+      background:#0066cc;
+      color:white;
+      border:none;
+      padding:6px 12px;
+      border-radius:4px;
+      cursor:pointer;
+    }
+    .task-card button:hover{
+      background:#004999;
+    }
+    #task-view{
+      display:none;
+    }
+    #task-view h2{
+      margin-top:0;
+    }
+    #back-btn{
+      margin-bottom:15px;
+      background:#0066cc;
+      color:white;
+      border:none;
+      padding:6px 12px;
+      border-radius:4px;
+      cursor:pointer;
+    }
+    #back-btn:hover{
+      background:#004999;
+    }
+    .file-tags span{
+      display:inline-block;
+      background:#eef2fa;
+      color:#3366bb;
+      padding:2px 6px;
+      margin:2px;
+      border-radius:4px;
+      font-size:12px;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Ventana del Colaborador</h1>
+</header>
+<div class="container">
+  <!-- List of tasks for a collaborator -->
+  <div id="collab-list">
+    <h2>Tareas asignadas</h2>
+    <div id="tasks-container"></div>
+  </div>
+  <!-- Detailed task view -->
+  <div id="task-view">
+    <button id="back-btn" onclick="backToList()">&larr; Volver</button>
+    <div id="task-detail"></div>
+  </div>
+</div>
+
+<script>
+// Lista de tareas. Esta copia se genera a partir del archivo de demostración principal.
+const T = [
+  {id:'t1',collaborator:'A',desc:'Conciliación bancaria periodo 2024-07',status:'proceso',sources:['Estados de cuenta','CFDIs'],period:'2024-07',notes:'Revisar bancos vs CFDIs y realizar conciliación.',point:'1',inciso:'a',req:'1',files:['estado_cuenta_banco.pdf','cfdi_listado_2024-07.xml']},
+  {id:'t2',collaborator:'A',desc:'Documentación de precios de transferencia 2024-09',status:'pendiente',sources:['Contratos','Estudios TP'],period:'2024-09',notes:'Revisar estudio de precios y generar documentación.',point:'2',inciso:'a',req:'1',files:['contrato_prestacion_servicios.pdf','estudio_precio_transf.pdf']},
+  {id:'t3',collaborator:'A',desc:'Respuesta IDR 2024-08 — preparar escrito libre',status:'completo',sources:['CFDIs','Estados de cuenta','Escrito libre'],period:'2024-08',notes:'Preparar escrito libre con argumentos y anexos.',point:'2',inciso:'a',req:'1',files:['escrito_libre_respuesta_2024-08.pdf','soporte_cfd.pdf']},
+  {id:'t4',collaborator:'A',desc:'Obtener cartas de saldo 2024-08',status:'pendiente',sources:['Bancos','Cartas saldo'],period:'2024-08',notes:'Solicitar cartas de saldo a bancos y verificar firmas.',point:'1',inciso:'a',req:'1',files:['carta_saldo_modelo.docx']},
+  {id:'t5',collaborator:'B',desc:'Validar conciliación bancaria 2024-09',status:'proceso',sources:['Reportes contables','CFDIs'],period:'2024-09',notes:'Confirmar conciliación entre bancos y contabilidad.',point:'1',inciso:'a',req:'1',files:['reporte_conciliacion_final.xlsx']},
+  {id:'t6',collaborator:'B',desc:'Recopilar contratos con partes relacionadas 2024-09',status:'pendiente',sources:['Contratos','Documentos legales'],period:'2024-09',notes:'Localizar contratos vigentes con partes relacionadas.',point:'2',inciso:'b',req:'1',files:['contrato_servicios_relacionados.pdf']},
+  {id:'t7',collaborator:'C',desc:'Revisión de comparables de mercado 2024-09',status:'pendiente',sources:['Estudios comparables','Precios de transferencia'],period:'2024-09',notes:'Analizar comparables y preparar informe.',point:'2',inciso:'b',req:'1',files:['informe_comparables_mercado.pdf']},
+  {id:'t8',collaborator:'C',desc:'Revisar CFDIs emitidos vs registrados 2024-07',status:'proceso',sources:['CFDIs emitidos','Registros contables'],period:'2024-07',notes:'Verificar que todos los CFDIs emitidos se encuentren en contabilidad.',point:'1',inciso:'b',req:'2',files:['reporte_cfdi_emitidos.xls']},
+  {id:'t9',collaborator:'B',desc:'Respuesta IDR 2025-07 — preparar escrito de respuesta',status:'pendiente',sources:['Contratos','CFDIs'],period:'2025-07',notes:'Redactar escrito de respuesta al IDR con anexos pertinentes.',point:'2',inciso:'a',req:'1',files:['borrador_respuesta_idr.docx']},
+  {id:'t10',collaborator:'A',desc:'Revisión de CFDIs emitidos vs registrados 2025-07',status:'pendiente',sources:['CFDIs emitidos','Registros contables'],period:'2025-07',notes:'Verificar que todos los CFDIs emitidos se encuentren en contabilidad.',point:'1',inciso:'a',req:'1',files:['reporte_cfdi_emitidos_2025-07.xls']},
+  {id:'t11',collaborator:'C',desc:'Documentación de precios de transferencia 2025-07',status:'proceso',sources:['Estudios TP','Contratos'],period:'2025-07',notes:'Revisar estudio de precios y generar documentación.',point:'1',inciso:'b',req:'1',files:['estudio_tp_2025-07.pdf']},
+  {id:'t12',collaborator:'A',desc:'Conciliación IVA acreditable vs trasladado 2024-07',status:'pendiente',sources:['Declaraciones','CFDIs'],period:'2024-07',notes:'Corroborar que el IVA acreditable coincide con el trasladado.',point:'3',inciso:'a',req:'1',files:['comparativo_iva_2024-07.xlsx']},
+  {id:'t13',collaborator:'B',desc:'Preparar expediente de materialidad 2024-07',status:'proceso',sources:['Contratos','Estados de cuenta','CFDIs'],period:'2024-07',notes:'Armar expediente para acreditar materialidad de operaciones.',point:'1',inciso:'c',req:'1',files:['expediente_materialidad.pdf']},
+  {id:'t14',collaborator:'C',desc:'Revisar CFDIs vs facturas proveedoras 2024-08',status:'pendiente',sources:['CFDIs','Facturas proveedoras'],period:'2024-08',notes:'Revisar que los CFDIs emitidos por proveedores coinciden con facturas físicas.',point:'2',inciso:'b',req:'2',files:['relacion_cfdi_facturas_2024-08.xlsx']},
+  {id:'t15',collaborator:'A',desc:'Generar análisis de diferencias IVA 2024-08',status:'proceso',sources:['Declaraciones IVA','CFDIs','Contabilidad'],period:'2024-08',notes:'Analizar diferencias entre IVA acreditable y trasladado en el periodo.',point:'2',inciso:'b',req:'2',files:['analisis_diferencias_iva_2024-08.xlsx']},
+  {id:'t16',collaborator:'B',desc:'Análisis de operaciones con partes relacionadas 2024-08',status:'pendiente',sources:['Contratos','CFDIs','Estudio TP'],period:'2024-08',notes:'Analizar operaciones con partes relacionadas para justificar transacciones.',point:'2',inciso:'b',req:'2',files:['analisis_partes_relacionadas_2024-08.pdf']},
+  {id:'t17',collaborator:'C',desc:'Revisión de contratos y facturas 2024-08',status:'proceso',sources:['Contratos','Facturas','CFDIs'],period:'2024-08',notes:'Verificar vigencia y condiciones de contratos y facturas.',point:'1',inciso:'c',req:'1',files:['contratos_2024-08.zip','facturas_2024-08.zip']},
+  {id:'t18',collaborator:'A',desc:'Validar inventarios 2024-08',status:'pendiente',sources:['Inventarios','Estados de cuenta','CFDIs'],period:'2024-08',notes:'Revisar inventarios físicos y contra documentación.',point:'1',inciso:'c',req:'1',files:['inventarios_2024-08.xlsx']},
+  {id:'t19',collaborator:'B',desc:'Conciliación IVA acreditable vs trasladado 2024-08',status:'pendiente',sources:['Declaraciones','CFDIs'],period:'2024-08',notes:'Corroborar que el IVA acreditable coincide con el trasladado en agosto.',point:'1',inciso:'c',req:'1',files:['conciliacion_iva_2024-08.xlsx']},
+  {id:'t20',collaborator:'C',desc:'Conciliación bancaria periodo 2024-08',status:'proceso',sources:['Estados de cuenta','CFDIs'],period:'2024-08',notes:'Revisar bancos vs CFDIs y realizar conciliación.',point:'1',inciso:'a',req:'1',files:['estado_cuenta_banco_2024-08.pdf']},
+  {id:'t21',collaborator:'A',desc:'Análisis de devoluciones anteriores 2024-07',status:'pendiente',sources:['Expedientes previos','CFDIs'],period:'2024-07',notes:'Revisar expedientes de devoluciones anteriores para identificar patrones.',point:'3',inciso:'b',req:'1',files:['expedientes_previos.zip']},
+  {id:'t22',collaborator:'B',desc:'Preparar anexos y pruebas adicionales 2024-07',status:'proceso',sources:['CFDIs','Estados de cuenta','Contratos'],period:'2024-07',notes:'Reunir anexos y evidencias para respuesta al SAT.',point:'3',inciso:'b',req:'1',files:['anexos_adicionales_2024-07.zip']},
+  {id:'t23',collaborator:'C',desc:'Documentar ajustes y notas de crédito 2024-08',status:'pendiente',sources:['Notas de crédito','CFDIs'],period:'2024-08',notes:'Registrar y justificar ajustes y notas de crédito emitidas.',point:'2',inciso:'b',req:'2',files:['notas_credito_2024-08.xlsx']},
+  {id:'t24',collaborator:'A',desc:'Generar cronograma de entrega de documentación 2024-08',status:'proceso',sources:['Calendario','Contratos'],period:'2024-08',notes:'Elaborar cronograma para entregar documentación al SAT.',point:'2',inciso:'c',req:'2',files:['cronograma_2024-08.xlsx']},
+  {id:'t25',collaborator:'B',desc:'Analizar certificados de exportación 2024-08',status:'pendiente',sources:['Certificados de exportación','Pedimentos'],period:'2024-08',notes:'Verificar cumplimiento en exportaciones al 0% de IVA.',point:'3',inciso:'c',req:'3',files:['certificados_exportacion_2024-08.pdf']},
+  // Nuevos puntos basados en expediente de devoluciones
+  {id:'t26',collaborator:'A',desc:'Papel de trabajo de depósitos bancarios 2024-07',status:'pendiente',sources:['Bancos','CFDIs','Conciliación bancaria'],period:'2024-07',notes:'Elaborar papel de trabajo que detalle cada depósito bancario y su naturaleza.',point:'1',inciso:'d',req:'1',files:['papel_trabajo_depositos_2024-07.xlsx']},
+  {id:'t27',collaborator:'A',desc:'Relacionar depósitos con CFDIs 2024-07',status:'pendiente',sources:['Bancos','CFDIs'],period:'2024-07',notes:'Vincular cada depósito bancario con su CFDI correspondiente.',point:'1',inciso:'e',req:'1',files:['relacion_depositos_cfdi_2024-07.xlsx']},
+  {id:'t28',collaborator:'B',desc:'Papel de trabajo de pedimentos de exportación 2024-08',status:'proceso',sources:['Pedimentos','CFDIs'],period:'2024-08',notes:'Preparar papel de trabajo que detalle cada pedimento de exportación.',point:'3',inciso:'c',req:'2',files:['pedimentos_exportacion_2024-08.xlsx']},
+  {id:'t29',collaborator:'A',desc:'Amarre contable de IVA trasladado 2024-08',status:'pendiente',sources:['Contabilidad','Declaraciones IVA'],period:'2024-08',notes:'Corroborar que el IVA trasladado en contabilidad coincida con declaraciones.',point:'3',inciso:'d',req:'2',files:['amarre_iva_trasladado_2024-08.xlsx']},
+  {id:'t30',collaborator:'B',desc:'Balanza de comprobación a nivel subcuenta 2024-08',status:'proceso',sources:['Balanza','Contabilidad'],period:'2024-08',notes:'Obtener balanza de comprobación detallada a nivel subcuenta.',point:'3',inciso:'d',req:'2',files:['balanza_subcuenta_2024-08.pdf']},
+  {id:'t31',collaborator:'C',desc:'Verificar proveedores en lista 69-B 2024-08',status:'pendiente',sources:['Lista 69-B','CFDIs','Contratos'],period:'2024-08',notes:'Comprobar que los proveedores no se encuentren en la lista negra del SAT.',point:'4',inciso:'a',req:'3',files:['lista_69b_proveedores_2024-08.xlsx']},
+  {id:'t32',collaborator:'A',desc:'Papel de trabajo de cargos bancarios 2024-07',status:'pendiente',sources:['Bancos','CFDIs'],period:'2024-07',notes:'Preparar papel de trabajo que detalle cada cargo bancario y su naturaleza.',point:'2',inciso:'b',req:'1',files:['papel_trabajo_cargos_2024-07.xlsx']},
+  {id:'t33',collaborator:'B',desc:'Relacionar pagos a proveedores con CFDIs 2024-07',status:'proceso',sources:['Bancos','CFDIs','Proveedores'],period:'2024-07',notes:'Vincular cada pago efectuado a proveedores con su CFDI.',point:'2',inciso:'c',req:'1',files:['relacion_pagos_cfdi_2024-07.xlsx']},
+  {id:'t34',collaborator:'C',desc:'Verificar REPSE y contratos 2024-08',status:'pendiente',sources:['REPSE','Contratos','CFDIs'],period:'2024-08',notes:'Revisar que los contratos y proveedores cumplan con REPSE.',point:'4',inciso:'a',req:'3',files:['verificacion_repse_contratos_2024-08.xlsx']},
+  {id:'t35',collaborator:'A',desc:'Análisis de ingresos vs depósitos 2024-07',status:'proceso',sources:['Declaraciones','Bancos','CFDIs'],period:'2024-07',notes:'Analizar las diferencias entre ingresos declarados y depósitos bancarios.',point:'2',inciso:'d',req:'1',files:['analisis_ingresos_depositos_2024-07.xlsx']},
+  {id:'t36',collaborator:'B',desc:'Amarre contable de IVA acreditable 2024-07',status:'pendiente',sources:['Contabilidad','Declaraciones IVA','CFDIs'],period:'2024-07',notes:'Corroborar que el IVA acreditable se refleje correctamente en contabilidad.',point:'3',inciso:'c',req:'1',files:['amarre_iva_acreditable_2024-07.xlsx']},
+  {id:'t37',collaborator:'C',desc:'Preparar para visita a domicilio fiscal 2024-07',status:'pendiente',sources:['Domicilio fiscal','Fotografías','Documentación'],period:'2024-07',notes:'Reunir documentación y evidencias para posible visita del SAT.',point:'4',inciso:'b',req:'1',files:['documentacion_visita_fiscal_2024-07.zip']},
+  {id:'t38',collaborator:'A',desc:'Pap. de trabajo de pagos a proveedores al 0% 2024-07',status:'pendiente',sources:['CFDIs','Pedimentos','Contratos'],period:'2024-07',notes:'Elaborar papel de trabajo que detalle los pagos a proveedores con IVA al 0%.',point:'3',inciso:'c',req:'2',files:['papel_trabajo_pagos_0_2024-07.xlsx']},
+  {id:'t39',collaborator:'B',desc:'Explicación de gastos estrictamente indispensables 2024-07',status:'pendiente',sources:['CFDIs','Declaraciones','Contratos'],period:'2024-07',notes:'Preparar escrito que explique por qué los gastos son indispensables.',point:'3',inciso:'d',req:'2',files:['explicacion_gastos_indispensables_2024-07.docx']},
+  {id:'t40',collaborator:'C',desc:'Verificación de REPSE y contratos 2024-08',status:'proceso',sources:['REPSE','Contratos','CFDIs'],period:'2024-08',notes:'Asegurarse de que los contratistas cumplan con la inscripción en REPSE.',point:'4',inciso:'b',req:'3',files:['repse_contratos_2024-08.xlsx']},
+  {id:'t41',collaborator:'A',desc:'Estudio de precios de transferencia adicional 2024-09',status:'pendiente',sources:['Estudios TP','Contratos','Mercado'],period:'2024-09',notes:'Preparar estudio complementario de precios de transferencia.',point:'4',inciso:'c',req:'3',files:['estudio_tp_adicional_2024-09.pdf']},
+  {id:'t42',collaborator:'B',desc:'Recopilar fotografías de productos y lugares de trabajo 2024-09',status:'proceso',sources:['Fotografías','Expedientes','Contratos'],period:'2024-09',notes:'Obtener fotos de productos elaborados y lugares de trabajo para el SAT.',point:'4',inciso:'d',req:'3',files:['fotos_productos_lugares_2024-09.zip']},
+  {id:'t43',collaborator:'C',desc:'Asegurar documentación en español 2024-09',status:'pendiente',sources:['Contratos','CFDIs','Documentos en lengua extranjera'],period:'2024-09',notes:'Verificar que toda la documentación esté en español o traducida.',point:'4',inciso:'e',req:'3',files:['documentos_espanol_2024-09.pdf']}
+];
+
+// Mapeo de fechas límite aproximadas por periodo para ordenar las tareas por urgencia.
+// Para los periodos sin especificar, se usará una fecha futura lejana.
+const dueDates = {
+  // Fechas de vencimiento aproximadas para ordenar tareas por urgencia.
+  // Los periodos sin especificar se considerarán con vencimiento muy lejano.
+  '2024-07': '2024-10-01',
+  '2024-08': '2024-11-01',
+  '2024-09': '2024-12-01',
+  '2024-10': '2025-01-01',
+  '2024-11': '2025-02-01',
+  '2024-12': '2025-03-01',
+  '2025-01': '2025-04-01',
+  '2025-02': '2025-05-01',
+  '2025-03': '2025-06-01',
+  '2025-04': '2025-07-01',
+  '2025-05': '2025-08-01',
+  '2025-06': '2025-09-01',
+  '2025-07': '2025-10-01'
+};
+
+// Inicializar la vista según los parámetros de la URL
+function init(){
+  var params = new URLSearchParams(window.location.search);
+  var tareaId = params.get('tarea');
+  var collab = params.get('colaborador');
+  if(tareaId){
+    // Mostrar detalle de la tarea
+    renderTaskView(tareaId);
+  } else if(collab){
+    // Mostrar lista de tareas del colaborador
+    renderCollaborator(collab);
+  } else {
+    document.getElementById('collab-list').style.display='none';
+    document.getElementById('task-view').style.display='none';
+    var msg = document.createElement('p');
+    msg.textContent = 'No se encontró tarea o colaborador en la URL. Ejemplo: ?colaborador=A o ?tarea=t1';
+    document.querySelector('.container').appendChild(msg);
+  }
+}
+
+// Renderizar lista de tareas de un colaborador
+function renderCollaborator(collab){
+  document.getElementById('task-view').style.display='none';
+  var listDiv = document.getElementById('collab-list');
+  listDiv.style.display='block';
+  var container = document.getElementById('tasks-container');
+  container.innerHTML = '';
+  // Filtrar tareas por colaborador y ordenarlas por fecha de vencimiento (más urgente primero)
+  var tasks = T.filter(function(t){ return t.collaborator === collab; }).sort(function(a,b){
+    var da = new Date(dueDates[a.period] || '9999-12-31');
+    var db = new Date(dueDates[b.period] || '9999-12-31');
+    return da - db;
+  });
+  if(tasks.length === 0){
+    var p = document.createElement('p');
+    p.textContent = 'No hay tareas asignadas al colaborador '+collab;
+    container.appendChild(p);
+    return;
+  }
+  tasks.forEach(function(t){
+    var stLabel = t.status==='completo' ? 'Completo' : t.status==='proceso' ? 'En proceso' : 'Pendiente';
+    var card = document.createElement('div');
+    card.className = 'task-card';
+    // Calcular días restantes basándose en la fecha de vencimiento para el periodo
+    var diasTexto = '';
+    var due = dueDates[t.period];
+    if(due){
+      var dDue = new Date(due);
+      var diff = Math.ceil((dDue - new Date())/(1000*60*60*24));
+      diasTexto = diff >= 0 ? diff + ' días restantes' : 'Vencida';
+    }
+    card.innerHTML = '<h3>'+t.desc+'</h3>'+
+                     '<p><strong>Estado:</strong> '+stLabel+'</p>'+
+                     '<p><strong>Fuentes:</strong> '+t.sources.join(', ')+'</p>'+
+                     (diasTexto ? '<p><em>'+diasTexto+'</em></p>' : '')+
+                     '<button onclick="openTask(\''+t.id+'\')">Ver detalle</button>';
+    container.appendChild(card);
+  });
+}
+
+// Abrir detalle de una tarea
+function openTask(id){
+  // Reemplazar la búsqueda en la URL manteniendo el colaborador si existe
+  var params = new URLSearchParams(window.location.search);
+  if(params.has('colaborador')){
+    window.location.search = '?tarea='+encodeURIComponent(id)+'&colaborador='+encodeURIComponent(params.get('colaborador'));
+  } else {
+    window.location.search = '?tarea='+encodeURIComponent(id);
+  }
+}
+
+// Renderizar vista detallada de la tarea
+function renderTaskView(id){
+  document.getElementById('collab-list').style.display='none';
+  var tv = document.getElementById('task-view');
+  tv.style.display = 'block';
+  var task = T.find(function(t){ return t.id === id; });
+  var detail = document.getElementById('task-detail');
+  if(!task){
+    detail.innerHTML = '<p>No se encontró la tarea.</p>';
+    return;
+  }
+  var stLabel = task.status==='completo' ? 'Completo' : task.status==='proceso' ? 'En proceso' : 'Pendiente';
+  var filesHtml = '';
+  if(task.files && task.files.length){
+    filesHtml = '<p><strong>Archivos:</strong> <span class="file-tags">'+task.files.map(function(f){return '<span>'+f+'</span>';}).join('')+'</span></p>';
+  }
+  detail.innerHTML = '<h2>'+task.desc+'</h2>'+
+                     '<p><strong>Responsable:</strong> '+task.collaborator+'</p>'+
+                     '<p><strong>Estado:</strong> '+stLabel+'</p>'+
+                     '<p><strong>Fuentes:</strong> '+task.sources.join(', ')+'</p>'+
+                     filesHtml+
+                     (task.notes ? '<p><strong>Observaciones:</strong> '+task.notes+'</p>' : '')+
+                     '<p><label><strong>Subir archivo:</strong> <input type="file"></label></p>';
+}
+
+// Volver a la lista de tareas conservando el colaborador en la URL
+function backToList(){
+  var params = new URLSearchParams(window.location.search);
+  if(params.has('colaborador')){
+    window.location.search = '?colaborador='+encodeURIComponent(params.get('colaborador'));
+  } else {
+    window.location.search = '';
+  }
+}
+
+window.onload = init;
+</script>
+</body>
+</html>

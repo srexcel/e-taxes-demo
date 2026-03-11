@@ -289,23 +289,57 @@ const T=[
   {id:'t43',collaborator:'A',desc:'Asegurar documentación en español 2024-09',status:'pendiente',sources:['Documentos','Traducciones'],period:'2024-09',notes:'Verificar que toda la documentación soporte esté en español y traducir si es necesario.',point:'4',inciso:'e',req:'3',files:['documentos_espanol_2024-09.zip','traducciones_2024-09.pdf']}
 ];
 
+// Mapeo de fechas límite aproximadas por periodo (más tempranas representan mayor urgencia).
+// Estas fechas se utilizan para ordenar las tareas de la más urgente a la menos urgente.
+const dueDates={
+  // Fechas de vencimiento aproximadas para ordenar tareas por urgencia.
+  // Periodos de IDR más recientes tienen fechas tempranas; periodos sin definir se considerarán menos urgentes.
+  '2024-07':'2024-10-01',
+  '2024-08':'2024-11-01',
+  '2024-09':'2024-12-01',
+  '2024-10':'2025-01-01',
+  '2024-11':'2025-02-01',
+  '2024-12':'2025-03-01',
+  '2025-01':'2025-04-01',
+  '2025-02':'2025-05-01',
+  '2025-03':'2025-06-01',
+  '2025-04':'2025-07-01',
+  '2025-05':'2025-08-01',
+  '2025-06':'2025-09-01',
+  '2025-07':'2025-10-01'
+};
+
 // Render collaborator cards
 function renderColaboradores(){
   const colaboradores=['A','B','C'];
   let html='';
   colaboradores.forEach(function(col){
-    const tasks=T.filter(function(t){return t.collaborator===col;});
+    // Filtrar y ordenar tareas por fecha de vencimiento; las más urgentes primero
+    const tasks=T.filter(function(t){ return t.collaborator===col; }).sort(function(a,b){
+      var da = new Date(dueDates[a.period] || '9999-12-31');
+      var db = new Date(dueDates[b.period] || '9999-12-31');
+      return da - db;
+    });
     let tasksHtml=tasks.map(function(t){
       const sourcesHtml=t.sources.map(function(s){return '<span>'+s+'</span>';}).join('');
       let stLabel='';
       if(t.status==='completo') stLabel='Completo';
       else if(t.status==='proceso') stLabel='En proceso';
       else stLabel='Pendiente';
+      // Calcular días restantes según la fecha de vencimiento del periodo
+      var diasTexto = '';
+      var due = dueDates[t.period];
+      if(due){
+        var dDue = new Date(due);
+        var diff = Math.ceil((dDue - new Date())/(1000*60*60*24));
+        diasTexto = diff >= 0 ? diff + ' días restantes' : 'Vencida';
+      }
       return '<div class="task">'+
         '<div class="task-desc">'+t.desc+'</div>'+
         '<div class="task-status '+t.status+'">'+stLabel+'</div>'+
         '<div class="task-sources">'+sourcesHtml+'</div>'+
         (t.notes?'<div class="task-notes">Observaciones: '+t.notes+'</div>':'')+
+        (diasTexto?'<div class="task-notes" style="color:var(--muted);font-style:italic;font-size:10px;">'+diasTexto+'</div>':'')+
         '</div>';
     }).join('');
     html += '<div class="colab-card"><div class="colab-header"><span>Colaborador '+col+'</span><span>'+tasks.length+' tareas</span></div>'+tasksHtml+'</div>';
@@ -338,7 +372,12 @@ function openProject(idx){
   pd.innerHTML='';
   pd.appendChild(card);
   // Render tasks for this project
-  var tasks=T.filter(function(t){return t.period===s.p;});
+  // Filtrar tareas del proyecto y ordenarlas por fecha de vencimiento (más urgentes primero)
+  var tasks=T.filter(function(t){ return t.period===s.p; }).sort(function(a,b){
+    var da = new Date(dueDates[a.period] || '9999-12-31');
+    var db = new Date(dueDates[b.period] || '9999-12-31');
+    return da - db;
+  });
   var tasksContainer=document.getElementById('pv-tasks');
   tasksContainer.innerHTML='';
   if(tasks.length===0){
@@ -377,6 +416,12 @@ function openProject(idx){
           html += '<div class="inciso">' +
             '<div class="inciso-header" onclick="toggleTasks(this)"><span>Inciso '+p+'-'+inc+'</span><span style="font-size:10px;color:var(--muted);">▼</span></div>' +
             '<div class="task-list">';
+          // Ordenar tareas por fecha de vencimiento dentro de cada inciso
+          incs[inc] = incs[inc].sort(function(a,b){
+            var da = new Date(dueDates[a.period] || '9999-12-31');
+            var db = new Date(dueDates[b.period] || '9999-12-31');
+            return da - db;
+          });
           incs[inc].forEach(function(t){
             var sourcesHtml = t.sources.map(function(s){ return '<span>'+s+'</span>'; }).join('');
             var stLabel = t.status === 'completo' ? 'Completo' : t.status === 'proceso' ? 'En proceso' : 'Pendiente';
