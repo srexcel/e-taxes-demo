@@ -1,647 +1,99 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>E-Taxes Protocol — Seguimiento de Devoluciones IVA</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
-:root{--bg:#0e1117;--surface:#161b24;--surface2:#1e2533;--border:#2a3142;--accent:#3b82f6;--accent2:#10b981;--warn:#f59e0b;--danger:#ef4444;--text:#e2e8f0;--muted:#64748b;--purple:#a78bfa;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;}
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;}
-.topbar{background:#0a0d14;border-bottom:1px solid var(--border);padding:10px 32px;display:flex;align-items:center;justify-content:space-between;}
-.topbar-left{display:flex;align-items:center;gap:16px;}
-.topbar-mark{width:26px;height:26px;background:var(--accent);border-radius:4px;display:grid;place-items:center;font-family:var(--mono);font-size:9px;color:white;font-weight:600;}
-.topbar-brand{font-size:14px;font-weight:600;letter-spacing:.5px;}.topbar-brand span{color:var(--accent);}
-.topbar-rfc{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;}
-.topbar-right{display:flex;align-items:center;gap:16px;}
-.topbar-badge{font-family:var(--mono);font-size:9px;color:var(--muted);padding:3px 8px;border:1px solid var(--border);border-radius:3px;letter-spacing:1px;}
-.live-dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);animation:pulse 1.5s infinite;display:inline-block;}
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
-.hero{padding:40px 32px 28px;max-width:1200px;margin:0 auto;}
-.hero-eyebrow{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;}
-.hero-title{font-size:26px;font-weight:700;letter-spacing:-.5px;margin-bottom:4px;}.hero-title span{color:#60a5fa;}
-.hero-sub{font-size:13px;color:var(--muted);margin-bottom:28px;}
-.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:32px;}
-.kpi{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 18px;transition:border-color .15s;}.kpi:hover{border-color:var(--accent);}
-.kpi-val{font-family:var(--mono);font-size:20px;font-weight:600;margin-bottom:3px;}
-.kpi-val.blue{color:#60a5fa;}.kpi-val.green{color:#34d399;}.kpi-val.warn{color:#fbbf24;}.kpi-val.danger{color:#fb923c;}.kpi-val.purple{color:#a78bfa;}
-.kpi-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;}
-.section{max-width:1200px;margin:0 auto;padding:0 32px 40px;}
-.section-title{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
-.section-count{font-family:var(--mono);font-size:10px;color:var(--accent);font-weight:400;}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:12px;}
-.saldo{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color .15s,transform .1s;cursor:pointer;}
-.saldo:hover{border-color:var(--accent);transform:translateY(-1px);}
-.saldo.depositado{border-left:3px solid var(--accent2);}.saldo.en-proceso{border-left:3px solid var(--accent);}.saldo.idr-pendiente{border-left:3px solid var(--warn);}.saldo.idr-urgente{border-left:3px solid var(--danger);}.saldo.preparacion{border-left:3px solid var(--purple);}
-.saldo-header{padding:14px 16px 10px;display:flex;justify-content:space-between;align-items:flex-start;}
-.saldo-periodo{font-family:var(--mono);font-size:13px;font-weight:600;}
-.saldo-status{font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:3px;letter-spacing:.5px;text-transform:uppercase;}
-.st-depositado{background:rgba(16,185,129,.15);color:#34d399;}.st-proceso{background:rgba(59,130,246,.15);color:#60a5fa;}.st-idr{background:rgba(245,158,11,.15);color:#fbbf24;}.st-urgente{background:rgba(239,68,68,.15);color:#f87171;}.st-prep{background:rgba(167,139,250,.15);color:#a78bfa;}
-.saldo-body{padding:0 16px 14px;}
-.saldo-monto{font-family:var(--mono);font-size:18px;font-weight:600;color:var(--text);margin-bottom:8px;}.saldo-monto small{font-size:11px;color:var(--muted);font-weight:400;}
-.saldo-meta{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;}
-.saldo-meta-item{display:flex;justify-content:space-between;font-size:11px;}.saldo-meta-item .lbl{color:var(--muted);}.saldo-meta-item .val{font-family:var(--mono);font-size:10px;}
-.saldo-bar{height:3px;background:var(--border);margin:10px 0 0;}.saldo-bar-fill{height:100%;border-radius:2px;transition:width .6s ease;}
-.bar-green{background:var(--accent2);}.bar-blue{background:var(--accent);}.bar-warn{background:var(--warn);}.bar-danger{background:var(--danger);}.bar-purple{background:var(--purple);}
-.detail{display:none;background:var(--surface2);border-top:1px solid var(--border);padding:14px 16px;}.detail.open{display:block;}
-.detail-title{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;}
-.detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;}
-.detail-item{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 12px;}
-.detail-item-title{font-size:10px;color:var(--muted);margin-bottom:4px;}
-.detail-item-val{font-family:var(--mono);font-size:12px;font-weight:500;}
-.tl-item{display:flex;gap:10px;padding:6px 0;font-size:11px;border-left:2px solid var(--border);padding-left:14px;margin-left:6px;position:relative;}
-.tl-item::before{content:'';position:absolute;left:-4px;top:10px;width:6px;height:6px;border-radius:50%;background:var(--border);}
-.tl-item.done::before{background:var(--accent2);}.tl-item.active::before{background:var(--warn);box-shadow:0 0 6px var(--warn);}
-.tl-date{font-family:var(--mono);font-size:10px;color:var(--muted);width:70px;flex-shrink:0;}
-.tl-text{color:var(--text);}.tl-text.muted{color:var(--muted);}
-footer{padding:20px 32px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--muted);}
-@media(max-width:768px){.kpis{grid-template-columns:repeat(2,1fr);}.grid{grid-template-columns:1fr;}.hero{padding:24px 16px 16px;}.section{padding:0 16px 32px;}.topbar{padding:10px 16px;}}
-/* Collaborator card styles */
-.colab-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;overflow:hidden;}
-.colab-header{font-size:13px;font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
-.task{border-top:1px solid var(--border);padding:8px 0;}
-.task:first-child{border-top:none;}
-.task-desc{font-size:12px;margin-bottom:4px;color:var(--text);}
-.task-status{font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:3px;letter-spacing:.5px;text-transform:uppercase;display:inline-block;}
-.task-status.completo{background:rgba(16,185,129,.15);color:#34d399;}
-.task-status.proceso{background:rgba(59,130,246,.15);color:#60a5fa;}
-.task-status.pendiente{background:rgba(245,158,11,.15);color:#fbbf24;}
-.task-sources{font-size:10px;color:var(--muted);margin-top:4px;}
-.task-sources span{display:inline-block;margin-right:6px;}
-/* Files attached to tasks */
-.task-files{font-size:10px;color:var(--muted);margin-top:2px;}
-.task-files span{display:inline-block;margin-right:6px;background:var(--surface2);padding:2px 4px;border-radius:3px;}
-/* Notes for tasks */
-.task-notes{font-size:10px;color:var(--muted);margin-top:2px;font-style:italic;}
-/* Project view styles */
-.project-view{max-width:1200px;margin:0 auto;padding:0 32px 40px;display:none;}
-.pv-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
-.pv-header button{background:var(--surface);border:1px solid var(--border);color:var(--accent);font-family:var(--mono);font-size:10px;padding:6px 10px;border-radius:4px;cursor:pointer;transition:border-color .15s;}
-.pv-header button:hover{border-color:var(--accent);}
-.pv-container{display:flex;gap:20px;flex-wrap:wrap;}
-.pv-details{flex:2;min-width:300px;}
-.pv-tasks{flex:1;min-width:280px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;max-height:600px;overflow:auto;}
-.pv-tasks-title{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
-
-/* Styles for points and incisos within project tasks */
-.point{border-top:1px solid var(--border);padding:6px 0;}
-.point:first-child{border-top:none;}
-.point-header{font-size:12px;font-weight:600;color:var(--accent);cursor:pointer;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;}
-.inciso-list{display:none;padding-left:12px;}
-.inciso{margin-bottom:6px;}
-.inciso-header{font-size:11px;font-weight:600;color:var(--accent2);cursor:pointer;margin-bottom:2px;display:flex;justify-content:space-between;align-items:center;}
-.task-list{display:none;padding-left:12px;}
-.task-list .task{border-top:1px solid var(--border);padding-top:4px;margin-top:4px;}
-.task-list .task:first-child{border-top:none;margin-top:0;padding-top:0;}
-
-/* Styles for requirements grouping */
-.req{border-top:1px solid var(--border);padding:6px 0;}
-.req:first-child{border-top:none;}
-.req-header{font-size:12px;font-weight:700;color:var(--purple);cursor:pointer;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;}
-.point-list{display:none;padding-left:12px;}
-</style>
-</head>
-<body>
-<div class="topbar"><div class="topbar-left"><div class="topbar-mark">ET</div><span class="topbar-brand">E-Taxes <span>Protocol</span></span><span class="topbar-rfc">MPO0812157K3</span></div><div class="topbar-right"><span class="topbar-badge">SEGUIMIENTO IVA</span><span style="font-family:var(--mono);font-size:10px;color:var(--muted);display:flex;align-items:center;gap:6px;"><span class="live-dot"></span> Actualizado hoy</span></div></div>
-<div class="hero">
-<div class="hero-eyebrow">Devolución de IVA · Martek Power SA de CV</div>
-<div class="hero-title">Panel de <span>Seguimiento</span></div>
-<div class="hero-sub">Estado en tiempo real de las solicitudes de devolución de IVA ante el SAT</div>
-<div class="kpis">
-<div class="kpi"><div class="kpi-val blue">$115.8M</div><div class="kpi-lbl">IVA total pendiente</div></div>
-<div class="kpi"><div class="kpi-val green">$38.2M</div><div class="kpi-lbl">Depositado</div></div>
-<div class="kpi"><div class="kpi-val warn">$52.1M</div><div class="kpi-lbl">En proceso SAT</div></div>
-<div class="kpi"><div class="kpi-val danger">3</div><div class="kpi-lbl">IDRs por contestar</div></div>
-<div class="kpi"><div class="kpi-val purple">16</div><div class="kpi-lbl">Saldos totales</div></div>
-</div></div>
-<div class="section"><div class="section-title"><span>Saldos con requerimiento urgente</span><span class="section-count">3 saldos · plazo corriendo</span></div><div class="grid" id="g1"></div></div>
-<div class="section"><div class="section-title"><span>En proceso ante el SAT</span><span class="section-count">5 saldos · esperando resolución</span></div><div class="grid" id="g2"></div></div>
-<div class="section"><div class="section-title"><span>Depositados</span><span class="section-count">4 saldos · $38.2M recuperados</span></div><div class="grid" id="g3"></div></div>
-<div class="section"><div class="section-title"><span>En preparación</span><span class="section-count">4 saldos · armando expediente</span></div><div class="grid" id="g4"></div></div>
-
-<!-- Collaborators Section -->
-<div class="section">
-  <div class="section-title">
-    <span>Colaboradores</span>
-    <span class="section-count" id="colab-count">—</span>
-  </div>
-  <div class="grid" id="colab-grid"></div>
-</div>
-
-<!-- Project view container -->
-<div id="project-view" class="project-view">
-  <div class="pv-header">
-    <button id="back-btn" onclick="closeProject()">← Regresar</button>
-    <span id="pv-title"></span>
-  </div>
-  <div class="pv-container">
-    <div class="pv-details" id="pv-details"></div>
-    <div class="pv-tasks">
-      <div class="pv-tasks-title">Tareas del proyecto</div>
-      <div id="pv-tasks"></div>
-    </div>
-  </div>
-</div>
-
-<!-- Collaborator task view (participant view) -->
-<div id="task-view" class="project-view" style="display:none;">
-  <div class="pv-header">
-    <button onclick="closeTaskView()">← Regresar</button>
-    <span id="tv-title"></span>
-  </div>
-  <div class="pv-container">
-    <div class="pv-details" id="tv-details"></div>
-    <div class="pv-tasks">
-      <div class="pv-tasks-title">Detalle de la tarea</div>
-      <div id="tv-taskinfo"></div>
-      <div style="margin-top:12px;">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">Subir papeles de trabajo</div>
-        <input type="file" id="task-file" multiple style="font-size:11px;color:var(--text);background:var(--surface2);border:1px solid var(--border);padding:6px 8px;border-radius:4px;" />
-      </div>
-    </div>
-  </div>
-</div>
-
-<footer><span>E-Taxes Protocol · Seguimiento automatizado de devoluciones IVA</span><span>Confidencial · 2026</span></footer>
-<script>
-const S=[
-{p:"2024-07",m:8420000,s:"idr-urgente",sl:"IDR urgente",sc:"st-urgente",e:"12-Ene-2025",d:58,c:24350,b:65,bc:"bar-danger",cs:"ok",ms:"ok",cb:"ok",is:"pending",ds:"ok",tl:[{dt:"12-Ene",tx:"Solicitud enviada al SAT",dn:1},{dt:"28-Ene",tx:"SAT emite IDR — 20 días hábiles",dn:1},{dt:"05-Feb",tx:"Análisis de requerimiento completado",dn:1},{dt:"10-Mar",tx:"Respuesta en preparación — 8 días restantes",ac:1},{dt:"21-Mar",tx:"Vencimiento del plazo",mu:1}]},
-{p:"2024-08",m:7150000,s:"idr-urgente",sl:"IDR urgente",sc:"st-urgente",e:"15-Ene-2025",d:55,c:22100,b:55,bc:"bar-danger",cs:"ok",ms:"ok",cb:"pending",is:"pending",ds:"ok",tl:[{dt:"15-Ene",tx:"Solicitud enviada al SAT",dn:1},{dt:"02-Feb",tx:"SAT emite IDR — conciliación bancaria",dn:1},{dt:"08-Mar",tx:"Cruce bancario en proceso",ac:1},{dt:"25-Mar",tx:"Vencimiento del plazo",mu:1}]},
-{p:"2024-09",m:6830000,s:"idr-pendiente",sl:"IDR pendiente",sc:"st-idr",e:"20-Ene-2025",d:50,c:21800,b:45,bc:"bar-warn",cs:"ok",ms:"ok",cb:"ok",is:"pending",ds:"ok",tl:[{dt:"20-Ene",tx:"Solicitud enviada al SAT",dn:1},{dt:"10-Feb",tx:"SAT emite IDR — precios de transferencia",dn:1},{dt:"01-Mar",tx:"Documentación TP solicitada a la empresa",ac:1},{dt:"02-Abr",tx:"Vencimiento del plazo",mu:1}]},
-{p:"2024-10",m:9200000,s:"en-proceso",sl:"En proceso",sc:"st-proceso",e:"01-Feb-2025",d:38,c:26400,b:80,bc:"bar-blue",cs:"ok",ms:"ok",cb:"ok",is:"na",ds:"ok",tl:[{dt:"01-Feb",tx:"Solicitud enviada al SAT",dn:1},{dt:"15-Feb",tx:"SAT acusa recibo",dn:1},{dt:"10-Mar",tx:"En revisión por el SAT — sin requerimiento",ac:1}]},
-{p:"2024-11",m:11500000,s:"en-proceso",sl:"En proceso",sc:"st-proceso",e:"10-Feb-2025",d:29,c:28900,b:75,bc:"bar-blue",cs:"ok",ms:"ok",cb:"ok",is:"na",ds:"ok",tl:[{dt:"10-Feb",tx:"Solicitud enviada",dn:1},{dt:"25-Feb",tx:"SAT acusa recibo",dn:1},{dt:"10-Mar",tx:"En período de revisión",ac:1}]},
-{p:"2024-12",m:12800000,s:"en-proceso",sl:"En proceso",sc:"st-proceso",e:"15-Feb-2025",d:24,c:31200,b:70,bc:"bar-blue",cs:"ok",ms:"ok",cb:"ok",is:"na",ds:"ok",tl:[{dt:"15-Feb",tx:"Solicitud enviada",dn:1},{dt:"01-Mar",tx:"SAT acusa recibo",dn:1},{dt:"10-Mar",tx:"Esperando resolución",ac:1}]},
-{p:"2025-01",m:9800000,s:"en-proceso",sl:"En proceso",sc:"st-proceso",e:"25-Feb-2025",d:14,c:25600,b:60,bc:"bar-blue",cs:"ok",ms:"ok",cb:"ok",is:"na",ds:"ok",tl:[{dt:"25-Feb",tx:"Solicitud enviada al SAT",dn:1},{dt:"05-Mar",tx:"SAT acusa recibo",dn:1}]},
-{p:"2025-02",m:8800000,s:"en-proceso",sl:"En proceso",sc:"st-proceso",e:"05-Mar-2025",d:5,c:23100,b:50,bc:"bar-blue",cs:"ok",ms:"ok",cb:"ok",is:"na",ds:"ok",tl:[{dt:"05-Mar",tx:"Solicitud enviada al SAT",dn:1}]},
-{p:"2024-03",m:8900000,s:"depositado",sl:"Depositado",sc:"st-depositado",e:"15-Oct-2024",d:0,c:19200,b:100,bc:"bar-green",cs:"ok",ms:"ok",cb:"ok",is:"ok",ds:"ok",tl:[{dt:"15-Oct",tx:"Solicitud enviada",dn:1},{dt:"02-Nov",tx:"IDR emitido — respondido en 5 días",dn:1},{dt:"18-Dic",tx:"SAT autoriza devolución",dn:1},{dt:"22-Dic",tx:"Depósito confirmado: $8,900,000",dn:1}]},
-{p:"2024-04",m:10200000,s:"depositado",sl:"Depositado",sc:"st-depositado",e:"01-Nov-2024",d:0,c:21500,b:100,bc:"bar-green",cs:"ok",ms:"ok",cb:"ok",is:"ok",ds:"ok",tl:[{dt:"01-Nov",tx:"Solicitud enviada",dn:1},{dt:"15-Dic",tx:"SAT autoriza sin requerimiento",dn:1},{dt:"20-Dic",tx:"Depósito confirmado: $10,200,000",dn:1}]},
-{p:"2024-05",m:9600000,s:"depositado",sl:"Depositado",sc:"st-depositado",e:"10-Nov-2024",d:0,c:22800,b:100,bc:"bar-green",cs:"ok",ms:"ok",cb:"ok",is:"ok",ds:"ok",tl:[{dt:"10-Nov",tx:"Solicitud enviada",dn:1},{dt:"05-Ene",tx:"IDR emitido — respondido en 3 días",dn:1},{dt:"20-Ene",tx:"SAT autoriza devolución",dn:1},{dt:"24-Ene",tx:"Depósito confirmado: $9,600,000",dn:1}]},
-{p:"2024-06",m:9500000,s:"depositado",sl:"Depositado",sc:"st-depositado",e:"20-Nov-2024",d:0,c:23400,b:100,bc:"bar-green",cs:"ok",ms:"ok",cb:"ok",is:"ok",ds:"ok",tl:[{dt:"20-Nov",tx:"Solicitud enviada",dn:1},{dt:"10-Ene",tx:"SAT autoriza sin requerimiento",dn:1},{dt:"15-Ene",tx:"Depósito confirmado: $9,500,000",dn:1}]},
-{p:"2025-03",m:7200000,s:"preparacion",sl:"Preparación",sc:"st-prep",e:"—",d:0,c:0,b:25,bc:"bar-purple",cs:"pending",ms:"pending",cb:"na",is:"na",ds:"pending",tl:[{dt:"10-Mar",tx:"Descarga de CFDIs en proceso",ac:1}]},
-{p:"2025-04",m:6800000,s:"preparacion",sl:"Preparación",sc:"st-prep",e:"—",d:0,c:0,b:15,bc:"bar-purple",cs:"pending",ms:"na",cb:"na",is:"na",ds:"na",tl:[{dt:"—",tx:"Pendiente de cierre contable",mu:1}]},
-{p:"2025-05",m:5200000,s:"preparacion",sl:"Preparación",sc:"st-prep",e:"—",d:0,c:0,b:10,bc:"bar-purple",cs:"na",ms:"na",cb:"na",is:"na",ds:"na",tl:[{dt:"—",tx:"Pendiente de cierre contable",mu:1}]},
-{p:"2025-06",m:6100000,s:"preparacion",sl:"Preparación",sc:"st-prep",e:"—",d:0,c:0,b:10,bc:"bar-purple",cs:"na",ms:"na",cb:"na",is:"na",ds:"na",tl:[{dt:"—",tx:"Pendiente de cierre contable",mu:1}]},
-// Dummy project for demonstration: new period 2025-07 with IDR pendiente
-{p:"2025-07",m:6500000,s:"idr-pendiente",sl:"IDR pendiente",sc:"st-idr",e:"10-Mar-2025",d:30,c:20000,b:30,bc:"bar-warn",cs:"ok",ms:"ok",cb:"pending",is:"pending",ds:"ok",tl:[{dt:"10-Mar",tx:"Solicitud enviada al SAT",dn:1},{dt:"25-Mar",tx:"SAT emite IDR — revisión de facturas",dn:1},{dt:"05-Abr",tx:"Vencimiento del plazo",mu:1}]},
-];
-function fmt(n){return '$'+n.toLocaleString('es-MX');}
-function si(v){return v==='ok'?'<span style="color:#34d399">✓</span>':v==='pending'?'<span style="color:#fbbf24">◌</span>':'<span style="color:var(--muted)">—</span>';}
-function sl(v){return v==='ok'?'Completo':v==='pending'?'En proceso':'N/A';}
-function r(s,i){
-  // Render a saldo card with toggleable detail. Clicking the card toggles details, clicking "Respuesta IDR" opens the project view.
-  var dt=s.d>0? s.d+' días':'—';
-  var ct=s.c>0? s.c.toLocaleString():'—';
-  // Build the HTML structure. The outer card toggles details via td(), not openProject().
-  return '<div class="saldo '+s.s+'" onclick="td(this)">'+
-    '<div class="saldo-header"><span class="saldo-periodo">'+s.p+'</span><span class="saldo-status '+s.sc+'">'+s.sl+'</span></div>'+
-    '<div class="saldo-body">'+
-      '<div class="saldo-monto">'+fmt(s.m)+' <small>MXN</small></div>'+
-      '<div class="saldo-meta">'+
-        '<div class="saldo-meta-item"><span class="lbl">Enviado</span><span class="val">'+s.e+'</span></div>'+
-        '<div class="saldo-meta-item"><span class="lbl">Días</span><span class="val">'+dt+'</span></div>'+
-        '<div class="saldo-meta-item"><span class="lbl">CFDIs</span><span class="val">'+ct+'</span></div>'+
-        '<div class="saldo-meta-item"><span class="lbl">Avance</span><span class="val">'+s.b+'%</span></div>'+
-      '</div>'+
-      '<div class="saldo-bar"><div class="saldo-bar-fill '+s.bc+'" style="width:'+s.b+'%"></div></div>'+
-    '</div>'+
-    '<div class="detail">'+
-      '<div class="detail-title">Expediente del periodo</div>'+
-      '<div class="detail-grid">'+
-        '<div class="detail-item"><div class="detail-item-title">CFDIs procesados</div><div class="detail-item-val">'+si(s.cs)+' '+sl(s.cs)+'</div></div>'+
-        '<div class="detail-item"><div class="detail-item-title">Metadata SAT</div><div class="detail-item-val">'+si(s.ms)+' '+sl(s.ms)+'</div></div>'+
-        '<div class="detail-item"><div class="detail-item-title">Conciliación bancaria</div><div class="detail-item-val">'+si(s.cb)+' '+(s.cb==='ok'?'Conciliado':sl(s.cb))+'</div></div>'+
-        // The IDR response row triggers openIdrPoints() to view tasks for this project. 
-        // Use event.stopPropagation() to prevent the parent card click from toggling details.
-        '<div class="detail-item" onclick="event.stopPropagation(); openIdrPoints('+i+')"><div class="detail-item-title">Respuesta IDR</div><div class="detail-item-val">'+si(s.is)+' '+(s.is==='ok'?'Respondido':sl(s.is))+'</div></div>'+
-        '<div class="detail-item"><div class="detail-item-title">Cruce vs declarado</div><div class="detail-item-val">'+si(s.ds)+' '+(s.ds==='ok'?'Sin discrepancias':sl(s.ds))+'</div></div>'+
-      '</div>'+
-      '<div style="margin-top:14px;">'+
-        '<div class="detail-title">Línea de tiempo</div>'+
-        s.tl.map(function(t){return '<div class="tl-item '+(t.dn?'done':t.ac?'active':'')+'"><span class="tl-date">'+t.dt+'</span><span class="tl-text '+(t.mu?'muted':'')+'">'+t.tx+'</span></div>';}).join('')+
-      '</div>'+
-    '</div>'+
-  '</div>';
-}
-function td(el){el.querySelector('.detail').classList.toggle('open');}
-// Populate saldos into each grid, using global index for click handling
-document.getElementById('g1').innerHTML = S.filter(function(s){return s.s==='idr-urgente'||s.s==='idr-pendiente';}).map(function(s){ return r(s, S.indexOf(s)); }).join('');
-document.getElementById('g2').innerHTML = S.filter(function(s){return s.s==='en-proceso';}).map(function(s){ return r(s, S.indexOf(s)); }).join('');
-document.getElementById('g3').innerHTML = S.filter(function(s){return s.s==='depositado';}).map(function(s){ return r(s, S.indexOf(s)); }).join('');
-document.getElementById('g4').innerHTML = S.filter(function(s){return s.s==='preparacion';}).map(function(s){ return r(s, S.indexOf(s)); }).join('');
-
-// Tasks assigned to collaborators with project period reference
-const T=[
-  {id:'t1',collaborator:'A',desc:'Conciliación bancaria periodo 2024-07',status:'proceso',sources:['Estados de cuenta','CFDIs'],period:'2024-07',notes:'Revisar bancos vs CFDIs y realizar conciliación.',point:'1',inciso:'a',req:'1',files:['estado_cuenta_banco.pdf','cfdi_listado_2024-07.xml']},
-  {id:'t2',collaborator:'A',desc:'Documentación de precios de transferencia 2024-09',status:'pendiente',sources:['Contratos','Estudios TP'],period:'2024-09',notes:'Revisar estudio de precios y generar documentación.',point:'2',inciso:'a',req:'1',files:['estudio_tp.pdf','contrato_comercial.pdf']},
-  {id:'t3',collaborator:'A',desc:'Respuesta IDR 2024-08 — preparar escrito libre',status:'completo',sources:['CFDIs','Estados de cuenta','Escrito libre'],period:'2024-08',notes:'Preparar escrito libre con argumentos y anexos.',point:'2',inciso:'a',req:'1',files:['escrito_libre_respuesta_2024-08.pdf','soporte_cfd.pdf']},
-  {id:'t4',collaborator:'B',desc:'Obtener cartas de saldo 2024-08',status:'pendiente',sources:['Bancos','CFDIs'],period:'2024-08',notes:'Solicitar cartas de saldo a bancos y revisar CFDIs.',point:'1',inciso:'a',req:'1',files:['carta_saldo_banco1.pdf','carta_saldo_banco2.pdf']},
-  {id:'t5',collaborator:'B',desc:'Subir contratos y estados de cuenta 2024-07',status:'proceso',sources:['Contratos','Estados de cuenta'],period:'2024-07',notes:'Recopilar contratos y estados; subir al sistema.',point:'1',inciso:'b',req:'1',files:['contratos_2024-07.zip','estados_cuenta_2024-07.pdf']},
-  {id:'t6',collaborator:'B',desc:'Validar conciliación bancaria 2024-09',status:'completo',sources:['CFDIs','Estados de cuenta'],period:'2024-09',notes:'Verificar conciliación final y registrar observaciones.',point:'1',inciso:'a',req:'1',files:['reporte_conciliacion_final.xlsx']},
-  {id:'t7',collaborator:'C',desc:'Validar CFDIs del periodo 2024-10',status:'completo',sources:['CFDIs'],period:'2024-10',notes:'Revisar CFDIs para inconsistencias y duplicados.',point:'1',inciso:'a',req:'1',files:['cfd_is_periodo_2024-10.zip']},
-  {id:'t8',collaborator:'C',desc:'Compilar cierre contable periodo 2025-03',status:'proceso',sources:['Pólizas','Libro mayor'],period:'2025-03',notes:'Generar estado de resultados y revisar con contabilidad.',point:'1',inciso:'a',req:'1',files:['polizas_marzo.xlsx','libro_mayor_marzo.xlsx']},
-  {id:'t9',collaborator:'C',desc:'Revisar discrepancias declaradas 2024-08',status:'pendiente',sources:['Declaraciones','CFDIs'],period:'2024-08',notes:'Detectar discrepancias en declaraciones y proponer ajustes.',point:'2',inciso:'b',req:'2',files:['declaracion_mensual_2024-08.pdf','reporte_diferencias.xlsx']},
-  {id:'t10',collaborator:'A',desc:'Revisar facturas periodo 2025-07',status:'proceso',sources:['CFDIs'],period:'2025-07',notes:'Verificar facturas y compararlas con estados de cuenta.',point:'1',inciso:'a',req:'1',files:['facturas_2025-07.zip','estados_cuenta_2025-07.pdf']},
-  {id:'t11',collaborator:'C',desc:'Preparar documentación legal periodo 2025-07',status:'pendiente',sources:['Contratos','Opinión de cumplimiento'],period:'2025-07',notes:'Elaborar expediente con contratos y oficios.',point:'1',inciso:'b',req:'1',files:['contratos_2025-07.pdf','opinion_cumplimiento.pdf']},
-  // Nuevos puntos y requerimientos adicionales
-  {id:'t12',collaborator:'C',desc:'Revisión de CFDIs emitidos vs registrados 2024-07',status:'pendiente',sources:['CFDIs','Registros contables'],period:'2024-07',notes:'Comparar CFDIs emitidos con libros contables.',point:'1',inciso:'c',req:'1',files:['emitidos_vs_registrados_2024-07.xlsx','libro_contable_2024-07.pdf']},
-  {id:'t13',collaborator:'B',desc:'Análisis de devoluciones anteriores 2024-07',status:'pendiente',sources:['Expedientes previos','Reportes SAT'],period:'2024-07',notes:'Revisar devoluciones de meses anteriores para hallar inconsistencias.',point:'2',inciso:'a',req:'2',files:['expedientes_previos_2024-07.zip','reporte_SAT_anterior.pdf']},
-  {id:'t14',collaborator:'B',desc:'Preparar evidencia de materialidad 2024-07',status:'pendiente',sources:['Contratos','Órdenes de compra','Evidencia de producción'],period:'2024-07',notes:'Compilar evidencia de materialidad para soportar la devolución.',point:'2',inciso:'b',req:'2',files:['evidencia_materialidad_2024-07.zip','ordenes_compra_2024-07.pdf']},
-  {id:'t15',collaborator:'C',desc:'Revisión de DIOT y retenciones 2024-07',status:'pendiente',sources:['Declaraciones DIOT','Retenciones IVA'],period:'2024-07',notes:'Verificar DIOT y retenciones declaradas en el periodo.',point:'3',inciso:'a',req:'1',files:['diot_2024-07.pdf','retenciones_iva_2024-07.xlsx']},
-  {id:'t16',collaborator:'C',desc:'Análisis de ingresos vs CFDIs 2024-08',status:'pendiente',sources:['CFDIs','Registros contables'],period:'2024-08',notes:'Comparar ingresos registrados contra CFDIs emitidos.',point:'1',inciso:'c',req:'1',files:['ingresos_vs_cfd_2024-08.xlsx','registros_contables_2024-08.pdf']},
-  {id:'t17',collaborator:'B',desc:'Documentar ajustes y notas de crédito 2024-08',status:'pendiente',sources:['CFDIs','Notas de crédito','Ajustes contables'],period:'2024-08',notes:'Identificar notas de crédito y ajustes, documentar para el SAT.',point:'2',inciso:'c',req:'2',files:['notas_credito_2024-08.pdf','ajustes_contables_2024-08.xlsx']},
-  {id:'t18',collaborator:'A',desc:'Generar cronograma de entrega de documentación 2024-08',status:'proceso',sources:['Plan de trabajo'],period:'2024-08',notes:'Organizar fechas de entrega de documentación al SAT y colaboradores.',point:'3',inciso:'a',req:'2',files:['cronograma_entrega_2024-08.xlsx']},
-  {id:'t19',collaborator:'B',desc:'Recopilar contratos con partes relacionadas 2024-09',status:'pendiente',sources:['Contratos','Relaciones de partes'],period:'2024-09',notes:'Obtener y organizar contratos con partes relacionadas.',point:'2',inciso:'b',req:'1',files:['contratos_partes_relacionadas_2024-09.zip','lista_partes_relacionadas.pdf']},
-  {id:'t20',collaborator:'A',desc:'Revisión de comparables de mercado 2024-09',status:'pendiente',sources:['Estudios de mercado'],period:'2024-09',notes:'Analizar estudios de comparables para justificar precios de transferencia.',point:'2',inciso:'c',req:'1',files:['estudios_comparables_2024-09.pdf']},
-  {id:'t21',collaborator:'C',desc:'Análisis de flujos intercompañía 2024-09',status:'pendiente',sources:['Registros contables','Estados de flujo'],period:'2024-09',notes:'Revisar flujos financieros entre filiales.',point:'3',inciso:'a',req:'2',files:['flujos_intercompania_2024-09.xlsx','reportes_filiales_2024-09.pdf']},
-  {id:'t22',collaborator:'B',desc:'Preparar conclusión y justificación de transacciones 2024-09',status:'pendiente',sources:['Contratos','Reportes internos'],period:'2024-09',notes:'Redactar conclusión con justificación del valor de las transacciones.',point:'3',inciso:'b',req:'2',files:['conclusion_transacciones_2024-09.docx','soporte_interno_2024-09.pdf']},
-  {id:'t23',collaborator:'A',desc:'Preparar reporte de discrepancias 2025-07',status:'pendiente',sources:['CFDIs','Registros contables'],period:'2025-07',notes:'Detectar discrepancias en ingresos y gastos.',point:'2',inciso:'a',req:'1',files:['reporte_discrepancias_2025-07.xlsx','cfd_vs_contabilidad_2025-07.pdf']},
-  {id:'t24',collaborator:'C',desc:'Consolidar CFDIs de proveedores 2025-07',status:'proceso',sources:['CFDIs','Proveedores'],period:'2025-07',notes:'Reunir CFDIs de proveedores para conciliación.',point:'1',inciso:'c',req:'1',files:['cfdi_proveedores_2025-07.zip','lista_proveedores_2025-07.xlsx']},
-  {id:'t25',collaborator:'B',desc:'Revisión de IVA acreditable vs trasladado 2025-07',status:'pendiente',sources:['DIOT','CFDIs'],period:'2025-07',notes:'Calcular diferencias entre IVA acreditable y trasladado.',point:'3',inciso:'a',req:'1',files:['iva_acreditable_vs_trasladado_2025-07.xlsx','diot_2025-07.pdf']}
-  ,
-  // Tareas adicionales inspiradas en el expediente de devoluciones y buenas prácticas de IVA
-  // 2024-07: Trabajo sobre depósitos bancarios, CFDIs y pedimentos
-  {id:'t26',collaborator:'A',desc:'Papel de trabajo de depósitos bancarios 2024-07',status:'pendiente',sources:['Estados de cuenta','CFDIs'],period:'2024-07',notes:'Segregar ingresos, traspasos, devoluciones y abonos no reconocidos.',point:'1',inciso:'d',req:'1',files:['papel_de_trabajo_depositos_2024-07.xlsx','extractos_bancarios_2024-07.pdf']},
-  {id:'t27',collaborator:'C',desc:'Relacionar depósitos con CFDIs 2024-07',status:'pendiente',sources:['Estados de cuenta','CFDIs'],period:'2024-07',notes:'Vincular cada depósito con su CFDI (folio, fecha, concepto).',point:'1',inciso:'e',req:'1',files:['relacion_depositos_cfd_2024-07.xlsx']},
-  {id:'t28',collaborator:'B',desc:'Documentar pedimentos de exportación 2024-07',status:'pendiente',sources:['Pedimentos','Facturas'],period:'2024-07',notes:'Integrar pedimentos de exportación con sus facturas correspondientes.',point:'2',inciso:'c',req:'1',files:['pedimentos_exportacion_2024-07.pdf','facturas_exportacion_2024-07.zip']},
-  // 2024-08: Amarre contable, balanza de comprobación y verificación de proveedores
-  {id:'t29',collaborator:'C',desc:'Amarre contable de IVA trasladado 2024-08',status:'pendiente',sources:['Registros contables','Estados financieros'],period:'2024-08',notes:'Conciliar el IVA trasladado con las cuentas contables que lo integran.',point:'3',inciso:'b',req:'2',files:['amarre_iva_trasladado_2024-08.xlsx','catalogo_cuentas_2024-08.pdf']},
-  {id:'t30',collaborator:'A',desc:'Balanza de comprobación a nivel subcuenta 2024-08',status:'pendiente',sources:['Balanzas','Registros contables'],period:'2024-08',notes:'Preparar balanza de comprobación mostrando cargos y abonos por subcuenta.',point:'3',inciso:'c',req:'2',files:['balanza_subcuentas_2024-08.xlsx']},
-  {id:'t31',collaborator:'B',desc:'Verificar proveedores en lista 69-B 2024-08',status:'pendiente',sources:['Lista 69-B','Relación de proveedores'],period:'2024-08',notes:'Revisar que los proveedores no se encuentren en listas negras del SAT.',point:'3',inciso:'d',req:'3',files:['verificacion_proveedores_69B_2024-08.xlsx','lista_proveedores_2024-08.pdf']},
-  // 2024-09: Cargos bancarios, CFDIs de proveedores y REPSE
-  {id:'t32',collaborator:'A',desc:'Papel de trabajo de cargos bancarios 2024-09',status:'pendiente',sources:['Estados de cuenta'],period:'2024-09',notes:'Segregar pagos a proveedores, traspasos y otros cargos no reconocidos.',point:'1',inciso:'d',req:'1',files:['papel_cargos_bancarios_2024-09.xlsx','extractos_bancarios_2024-09.pdf']},
-  {id:'t33',collaborator:'B',desc:'Relacionar pagos a proveedores con CFDIs 2024-09',status:'pendiente',sources:['Estados de cuenta','CFDIs'],period:'2024-09',notes:'Vincular cada pago con su factura (folio fiscal, concepto, fecha).',point:'2',inciso:'d',req:'2',files:['relacion_pagos_proveedores_2024-09.xlsx']},
-  {id:'t34',collaborator:'C',desc:'Verificación de REPSE y contratos de servicios 2024-09',status:'pendiente',sources:['REPSE','Contratos'],period:'2024-09',notes:'Obtener el REPSE y contratos de proveedores de servicios especializados.',point:'3',inciso:'b',req:'2',files:['repse_contratos_servicios_2024-09.pdf']},
-  // 2025-07: Trabajo sobre discrepancias, amarre y visitas domiciliarias
-  {id:'t35',collaborator:'A',desc:'Papel de trabajo de depósitos 2025-07',status:'pendiente',sources:['Estados de cuenta','CFDIs'],period:'2025-07',notes:'Analizar ingresos y otros depósitos para detectar variaciones.',point:'2',inciso:'b',req:'1',files:['papel_depositos_2025-07.xlsx','extractos_2025-07.pdf']},
-  {id:'t36',collaborator:'C',desc:'Amarre contable de IVA acreditable 2025-07',status:'pendiente',sources:['Registros contables','Declaraciones'],period:'2025-07',notes:'Conciliar el IVA acreditable con las cuentas contables y DIOT.',point:'3',inciso:'b',req:'2',files:['amarre_iva_acreditable_2025-07.xlsx','declaracion_diot_2025-07.pdf']},
-  {id:'t37',collaborator:'B',desc:'Verificación de domicilio fiscal 2025-07',status:'pendiente',sources:['Documentación del domicilio','Avisos SAT'],period:'2025-07',notes:'Preparar documentación del domicilio fiscal ante posible visita del SAT.',point:'4',inciso:'a',req:'1',files:['documentacion_domicilio_2025-07.pdf','fotos_inmueble_2025-07.zip']}
-  ,
-  // Más tareas inspiradas en requisitos del expediente de devoluciones
-  // 2024-07: Pagos a proveedores con tasa 0% y explicación de erogaciones
-  {id:'t38',collaborator:'C',desc:'Papel de trabajo de pagos a proveedores al 0% 2024-07',status:'pendiente',sources:['Estados de cuenta','CFDIs'],period:'2024-07',notes:'Identificar pagos al 0% de IVA y vincularlos con sus CFDIs correspondientes.',point:'3',inciso:'c',req:'2',files:['papel_pagos_0_2024-07.xlsx','cfd_is_0_2024-07.pdf']},
-  {id:'t39',collaborator:'B',desc:'Explicación de erogaciones estrictamente indispensables 2024-07',status:'pendiente',sources:['Contratos','Reportes internos'],period:'2024-07',notes:'Redactar justificación de cada erogación para demostrar su indispensabilidad fiscal.',point:'3',inciso:'d',req:'2',files:['explicacion_erogaciones_2024-07.docx','soporte_erogaciones_2024-07.pdf']},
-  // 2024-08: REPSE y contratos de servicios especializados
-  {id:'t40',collaborator:'A',desc:'Verificación de REPSE y contratos 2024-08',status:'pendiente',sources:['REPSE','Contratos'],period:'2024-08',notes:'Confirmar registro en REPSE y recopilar contratos de servicios especializados.',point:'4',inciso:'a',req:'3',files:['repse_2024-08.pdf','contratos_servicios_especializados_2024-08.zip']},
-  // 2024-09: Estudios TP adicionales, fotografías y traducciones
-  {id:'t41',collaborator:'B',desc:'Estudio de precios de transferencia adicional 2024-09',status:'pendiente',sources:['Estudios TP','Contratos'],period:'2024-09',notes:'Preparar estudio adicional de precios de transferencia por actividades con partes relacionadas.',point:'4',inciso:'c',req:'3',files:['estudio_tp_adicional_2024-09.pdf','contratos_relacionados_2024-09.pdf']},
-  {id:'t42',collaborator:'C',desc:'Recopilar fotografías de productos y lugares de trabajo 2024-09',status:'pendiente',sources:['Fotografías','Inventario'],period:'2024-09',notes:'Tomar fotografías de instalaciones y productos para documentar operaciones.',point:'4',inciso:'d',req:'3',files:['fotos_instalaciones_2024-09.zip','fotos_productos_2024-09.zip']},
-  {id:'t43',collaborator:'A',desc:'Asegurar documentación en español 2024-09',status:'pendiente',sources:['Documentos','Traducciones'],period:'2024-09',notes:'Verificar que toda la documentación soporte esté en español y traducir si es necesario.',point:'4',inciso:'e',req:'3',files:['documentos_espanol_2024-09.zip','traducciones_2024-09.pdf']}
-];
-
-// Mapeo de fechas límite aproximadas por periodo (más tempranas representan mayor urgencia).
-// Estas fechas se utilizan para ordenar las tareas de la más urgente a la menos urgente.
-const dueDates={
-  // Fechas de vencimiento aproximadas para ordenar tareas por urgencia.
-  // Periodos de IDR más recientes tienen fechas tempranas; periodos sin definir se considerarán menos urgentes.
-  '2024-07':'2024-10-01',
-  '2024-08':'2024-11-01',
-  '2024-09':'2024-12-01',
-  '2024-10':'2025-01-01',
-  '2024-11':'2025-02-01',
-  '2024-12':'2025-03-01',
-  '2025-01':'2025-04-01',
-  '2025-02':'2025-05-01',
-  '2025-03':'2025-06-01',
-  '2025-04':'2025-07-01',
-  '2025-05':'2025-08-01',
-  '2025-06':'2025-09-01',
-  '2025-07':'2025-10-01'
-};
-
-// Render collaborator cards
-function renderColaboradores(){
-  const colaboradores=['A','B','C'];
-  let html='';
-  colaboradores.forEach(function(col){
-    // Filtrar y ordenar tareas por fecha de vencimiento; las más urgentes primero
-    const tasks=T.filter(function(t){ return t.collaborator===col; }).sort(function(a,b){
-      var da = new Date(dueDates[a.period] || '9999-12-31');
-      var db = new Date(dueDates[b.period] || '9999-12-31');
-      return da - db;
-    });
-    let tasksHtml=tasks.map(function(t){
-      const sourcesHtml=t.sources.map(function(s){return '<span>'+s+'</span>';}).join('');
-      let stLabel='';
-      if(t.status==='completo') stLabel='Completo';
-      else if(t.status==='proceso') stLabel='En proceso';
-      else stLabel='Pendiente';
-      // Calcular días restantes según la fecha de vencimiento del periodo
-      var diasTexto = '';
-      var due = dueDates[t.period];
-      if(due){
-        var dDue = new Date(due);
-        var diff = Math.ceil((dDue - new Date())/(1000*60*60*24));
-        diasTexto = diff >= 0 ? diff + ' días restantes' : 'Vencida';
-      }
-      return '<div class="task">'+
-        '<div class="task-desc">'+t.desc+'</div>'+
-        '<div class="task-status '+t.status+'">'+stLabel+'</div>'+
-        '<div class="task-sources">'+sourcesHtml+'</div>'+
-        (t.notes?'<div class="task-notes">Observaciones: '+t.notes+'</div>':'')+
-        (diasTexto?'<div class="task-notes" style="color:var(--muted);font-style:italic;font-size:10px;">'+diasTexto+'</div>':'')+
-        '</div>';
-    }).join('');
-    html += '<div class="colab-card"><div class="colab-header"><span>Colaborador '+col+'</span><span>'+tasks.length+' tareas</span></div>'+tasksHtml+'</div>';
-  });
-  document.getElementById('colab-grid').innerHTML=html;
-  document.getElementById('colab-count').textContent=T.length+' tareas';
-}
-
-// Function to open a specific project view by index
-function openProject(idx){
-  var s=S[idx];
-  // Store current project index globally for return navigation
-  window.currentProjectIndex = idx;
-  // Hide all list sections
-  document.querySelectorAll('.section').forEach(function(sec){sec.style.display='none';});
-  // Show project view
-  var pv=document.getElementById('project-view');
-  pv.style.display='block';
-  document.getElementById('pv-title').textContent='Proyecto '+s.p;
-  // Build detail card using r(s,idx) without click handler
-  var cardHtml=r(s, idx);
-  // Remove all onclick attributes inside the card when rendering in project view to avoid nested interactions
-  cardHtml=cardHtml.replace(/ onclick="[^\"]*"/g,'');
-  var container=document.createElement('div');
-  container.innerHTML=cardHtml;
-  var card=container.firstChild;
-  var detail=card.querySelector('.detail');
-  if(detail) detail.classList.add('open');
-  var pd=document.getElementById('pv-details');
-  pd.innerHTML='';
-  pd.appendChild(card);
-  // Render tasks for this project
-  // Filtrar tareas del proyecto y ordenarlas por fecha de vencimiento (más urgentes primero)
-  var tasks=T.filter(function(t){ return t.period===s.p; }).sort(function(a,b){
-    var da = new Date(dueDates[a.period] || '9999-12-31');
-    var db = new Date(dueDates[b.period] || '9999-12-31');
-    return da - db;
-  });
-  var tasksContainer=document.getElementById('pv-tasks');
-  tasksContainer.innerHTML='';
-  if(tasks.length===0){
-    tasksContainer.innerHTML='<p style="font-size:12px;color:var(--muted);">Sin tareas asignadas</p>';
-  } else {
-    // Group tasks by requerimiento, point and inciso for nested display
-    var groupedReq = {};
-    tasks.forEach(function(t){
-      var r = t.req || '1';
-      var p = t.point || '1';
-      var inc = t.inciso || 'a';
-      if(!groupedReq[r]) groupedReq[r] = {};
-      if(!groupedReq[r][p]) groupedReq[r][p] = {};
-      if(!groupedReq[r][p][inc]) groupedReq[r][p][inc] = [];
-      groupedReq[r][p][inc].push(t);
-    });
-    var html = '';
-    Object.keys(groupedReq).sort().forEach(function(r){
-      // Convert r to ordinal string for display (1er, 2do, 3er, 4to, etc.)
-      var ordinal = '';
-      if(r === '1') ordinal = '1er';
-      else if(r === '2') ordinal = '2do';
-      else if(r === '3') ordinal = '3er';
-      else if(r === '4') ordinal = '4to';
-      else ordinal = r + 'to';
-      html += '<div class="req">' +
-        '<div class="req-header" onclick="togglePoints(this)"><span>'+ordinal+' requerimiento</span><span style="font-size:10px;color:var(--muted);">▼</span></div>' +
-        '<div class="point-list">';
-      var points = groupedReq[r];
-      Object.keys(points).sort().forEach(function(p){
-        html += '<div class="point">' +
-          '<div class="point-header" onclick="toggleIncisos(this)"><span>Punto '+p+'</span><span style="font-size:10px;color:var(--muted);">▼</span></div>' +
-          '<div class="inciso-list">';
-        var incs = points[p];
-        Object.keys(incs).sort().forEach(function(inc){
-          html += '<div class="inciso">' +
-            '<div class="inciso-header" onclick="toggleTasks(this)"><span>Inciso '+p+'-'+inc+'</span><span style="font-size:10px;color:var(--muted);">▼</span></div>' +
-            '<div class="task-list">';
-          // Ordenar tareas por fecha de vencimiento dentro de cada inciso
-          incs[inc] = incs[inc].sort(function(a,b){
-            var da = new Date(dueDates[a.period] || '9999-12-31');
-            var db = new Date(dueDates[b.period] || '9999-12-31');
-            return da - db;
-          });
-          incs[inc].forEach(function(t){
-            var sourcesHtml = t.sources.map(function(s){ return '<span>'+s+'</span>'; }).join('');
-            var stLabel = t.status === 'completo' ? 'Completo' : t.status === 'proceso' ? 'En proceso' : 'Pendiente';
-            var respHtml = '<div class="task-sources"><span><strong>Responsable:</strong> '+t.collaborator+'</span></div>';
-            var filesHtml = '';
-            if(t.files && t.files.length){
-              filesHtml = '<div class="task-files">' + t.files.map(function(f){ return '<span>'+f+'</span>'; }).join('') + '</div>';
-            }
-            var taskHtml = '<div class="task" onclick="openTaskView(\''+t.id+'\')">' +
-              '<div class="task-desc">'+t.desc+'</div>' +
-              '<div class="task-status '+t.status+'">'+stLabel+'</div>' +
-              respHtml +
-              '<div class="task-sources">'+sourcesHtml+'</div>' +
-              filesHtml +
-              (t.notes ? '<div class="task-notes">Observaciones: '+t.notes+'</div>' : '') +
-              '</div>';
-            html += taskHtml;
-          });
-          html += '</div></div>';
-        });
-        html += '</div></div>';
-      });
-      html += '</div></div>';
-    });
-    // Render tasks grouped by requerimiento and append the add-task form for creating new tasks
-    tasksContainer.innerHTML = html + getAddTaskForm();
-  }
-}
-
-// Build HTML for add-task form. Allows admin to create new points/tasks within a project.
-function getAddTaskForm(){
-  return '<div id="add-task-form" style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px;">'+
-    '<div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;">Agregar nueva tarea</div>'+
-    '<div style="display:flex;flex-direction:column;gap:6px;">'+
-      '<input id="add-req" placeholder="Requerimiento (ej. 1)" style="padding:6px 8px;font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);" />'+
-      '<input id="add-point" placeholder="Punto (ej. 3)" style="padding:6px 8px;font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);" />'+
-      '<input id="add-inciso" placeholder="Inciso (ej. a)" style="padding:6px 8px;font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);" />'+
-      '<input id="add-desc" placeholder="Descripción de la tarea" style="padding:6px 8px;font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);" />'+
-      '<select id="add-collab" style="padding:6px 8px;font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);">'+
-        '<option value="A">Responsable A</option>'+
-        '<option value="B">Responsable B</option>'+
-        '<option value="C">Responsable C</option>'+
-      '</select>'+
-      '<select id="add-status" style="padding:6px 8px;font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);">'+
-        '<option value="pendiente">Pendiente</option>'+
-        '<option value="proceso">En proceso</option>'+
-        '<option value="completo">Completo</option>'+
-      '</select>'+
-      '<input id="add-sources" placeholder="Fuentes (separadas por comas)" style="padding:6px 8px;font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);" />'+
-      '<input id="add-notes" placeholder="Observaciones" style="padding:6px 8px;font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);" />'+
-      '<button onclick="addTask()" style="padding:6px 10px;font-size:12px;background:var(--accent);color:white;border:none;border-radius:4px;cursor:pointer;">Agregar tarea</button>'+
-    '</div>'+
-  '</div>';
-}
-
-// Add a new task to the current project. Reads values from the add-task form and updates the tasks list.
-function addTask(){
-  var req = document.getElementById('add-req').value.trim();
-  var point = document.getElementById('add-point').value.trim();
-  var inciso = document.getElementById('add-inciso').value.trim();
-  var desc = document.getElementById('add-desc').value.trim();
-  var collab = document.getElementById('add-collab').value;
-  var status = document.getElementById('add-status').value;
-  var sourcesRaw = document.getElementById('add-sources').value.trim();
-  var notes = document.getElementById('add-notes').value.trim();
-  // Validate required fields
-  if(!req || !point || !inciso || !desc){
-    alert('Favor de llenar Requerimiento, Punto, Inciso y Descripción');
-    return;
-  }
-  var sources = [];
-  if(sourcesRaw){
-    sources = sourcesRaw.split(',').map(function(s){ return s.trim(); }).filter(function(s){ return s.length>0; });
-  }
-  var newId = 't' + (T.length + 1);
-  var period = S[window.currentProjectIndex].p;
-  T.push({id: newId, collaborator: collab, desc: desc, status: status, sources: sources, period: period, notes: notes, point: point, inciso: inciso, req: req, files: []});
-  // Clear form fields
-  document.getElementById('add-req').value = '';
-  document.getElementById('add-point').value = '';
-  document.getElementById('add-inciso').value = '';
-  document.getElementById('add-desc').value = '';
-  document.getElementById('add-sources').value = '';
-  document.getElementById('add-notes').value = '';
-  // Re-render project view to include new task
-  openProject(window.currentProjectIndex);
-  // Also re-render collaborator overview so counts update
-  renderColaboradores();
-}
-
-// Open IDR points view when clicking on "Respuesta IDR" row. Simply open the project and focus on tasks.
-function openIdrPoints(idx){
-  openProject(idx);
-  // Optionally, you could add code here to scroll to the tasks column.
-}
-
-// Open collaborator/participant view for a specific task ID
-function openTaskView(id){
-  // Find the task by ID
-  var task=T.find(function(t){return t.id===id;});
-  if(!task) return;
-  // Find associated project/period and data
-  var project=S.find(function(s){return s.p===task.period;});
-  // Hide project view and sections
-  document.querySelectorAll('.section').forEach(function(sec){sec.style.display='none';});
-  document.getElementById('project-view').style.display='none';
-  // Show task view
-  var tv=document.getElementById('task-view');
-  tv.style.display='block';
-  // Title breadcrumb
-  document.getElementById('tv-title').textContent='Empresa · Proyecto '+task.period+' · Tarea';
-  // Build project summary card
-  var pd=document.getElementById('tv-details');
-  pd.innerHTML='';
-  if(project){
-    var cardHtml=r(project, S.indexOf(project));
-    // Remove all onclick attributes from the card HTML when showing in task view
-    cardHtml=cardHtml.replace(/ onclick="[^\"]*"/g, '');
-    var container=document.createElement('div');
-    container.innerHTML=cardHtml;
-    var card=container.firstChild;
-    var detail=card.querySelector('.detail');
-    if(detail) detail.classList.add('open');
-    pd.appendChild(card);
-  }
-  // Build task information
-  var info=document.getElementById('tv-taskinfo');
-  info.innerHTML='';
-  var sourcesHtml=task.sources.map(function(s){return '<span>'+s+'</span>';}).join('');
-  var stLabel=task.status==='completo'?'Completo':task.status==='proceso'?'En proceso':'Pendiente';
-  // Build responsibility line for task view
-  var respHtml='<div class="task-sources"><span><strong>Responsable:</strong> '+task.collaborator+'</span></div>';
-  // Files attached to this task
-  var filesHtml='';
-  if(task.files && task.files.length){
-    filesHtml='<div class="task-files">'+task.files.map(function(f){return '<span>'+f+'</span>';}).join('')+'</div>';
-  }
-  info.innerHTML+='<div class="task">'+
-    '<div class="task-desc">'+task.desc+'</div>'+
-    '<div class="task-status '+task.status+'">'+stLabel+'</div>'+
-    respHtml+
-    '<div class="task-sources">'+sourcesHtml+'</div>'+
-    filesHtml+
-    (task.notes?'<div class="task-notes">Observaciones: '+task.notes+'</div>':'')+
-    '</div>';
-}
-
-// Close collaborator/participant view and return to project view
-function closeTaskView(){
-  // Hide task view
-  document.getElementById('task-view').style.display='none';
-  // Show project view for the current project if defined
-  if(typeof window.currentProjectIndex!=='undefined'){
-    // Reopen project view
-    openProject(window.currentProjectIndex);
-  } else {
-    // Otherwise show the list sections
-    document.querySelectorAll('.section').forEach(function(sec){sec.style.display='block';});
-  }
-}
-
-function closeProject(){
-  // Show list sections
-  document.querySelectorAll('.section').forEach(function(sec){sec.style.display='block';});
-  // Hide project view
-  document.getElementById('project-view').style.display='none';
-}
-
-// Toggle visibility of incisos under a point
-function toggleIncisos(el){
-  var list = el.nextElementSibling;
-  if(!list) return;
-  if(list.style.display === 'none' || list.style.display === ''){
-    list.style.display = 'block';
-  } else {
-    list.style.display = 'none';
-  }
-}
-
-// Toggle visibility of tasks under an inciso
-function toggleTasks(el){
-  var list = el.nextElementSibling;
-  if(!list) return;
-  if(list.style.display === 'none' || list.style.display === ''){
-    list.style.display = 'block';
-  } else {
-    list.style.display = 'none';
-  }
-}
-
-// Toggle visibility of points under a requerimiento
-function togglePoints(el){
-  var list = el.nextElementSibling;
-  if(!list) return;
-  if(list.style.display === 'none' || list.style.display === ''){
-    list.style.display = 'block';
-  } else {
-    list.style.display = 'none';
-  }
-}
-
-// Initial render of collaborators
-renderColaboradores();
-
-// Check URL parameters for direct task view (participante)
-try{
-  var params=new URLSearchParams(window.location.search);
-  if(params.has('tarea')){
-    var tid=params.get('tarea');
-    // Attempt to find the corresponding project to set currentProjectIndex
-    var task=T.find(function(t){return t.id===tid;});
-    if(task){
-      var projectIndex=S.findIndex(function(s){return s.p===task.period;});
-      if(projectIndex>=0){
-        window.currentProjectIndex=projectIndex;
-      }
-      openTaskView(tid);
-    }
-  }
-} catch(e){}
-</script>
-</body>
-</html>
+  <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>E-Taxes Protocol — Demo</title>
+      <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body {
+                              min-height: 100vh;
+                              display: flex;
+                              align-items: center;
+                              justify-content: center;
+                              background: #0a0e1a;
+                              font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+                              color: #fff;
+                }
+                .container {
+                              text-align: center;
+                              padding: 60px 40px;
+                              max-width: 520px;
+                }
+                .logo {
+                              display: inline-flex;
+                              align-items: center;
+                              gap: 12px;
+                              margin-bottom: 50px;
+                }
+                .logo-icon {
+                              width: 48px; height: 48px;
+                              background: linear-gradient(135deg, #3b82f6, #06b6d4);
+                              border-radius: 12px;
+                              display: flex; align-items: center; justify-content: center;
+                              font-weight: 700; font-size: 18px;
+                }
+                .logo-text {
+                              font-size: 22px; font-weight: 600;
+                              letter-spacing: 1px;
+                }
+                .logo-text span { color: #3b82f6; }
+                h1 {
+                              font-size: 42px;
+                              font-weight: 700;
+                              margin-bottom: 16px;
+                              letter-spacing: -0.5px;
+                }
+                .subtitle {
+                              font-size: 18px;
+                              color: #94a3b8;
+                              margin-bottom: 50px;
+                              line-height: 1.5;
+                }
+                .phone-box {
+                              display: inline-flex;
+                              align-items: center;
+                              gap: 14px;
+                              background: rgba(59,130,246,0.1);
+                              border: 1px solid rgba(59,130,246,0.3);
+                              border-radius: 16px;
+                              padding: 20px 36px;
+                              font-size: 28px;
+                              font-weight: 600;
+                              letter-spacing: 2px;
+                              color: #3b82f6;
+                              text-decoration: none;
+                              transition: all 0.3s;
+                }
+                .phone-box:hover {
+                              background: rgba(59,130,246,0.2);
+                              border-color: rgba(59,130,246,0.5);
+                              transform: scale(1.03);
+                }
+                .phone-icon { font-size: 30px; }
+                .footer {
+                              margin-top: 60px;
+                              color: #475569;
+                              font-size: 13px;
+                }
+            </style>
+  </head>
+  <body>
+        <div class="container">
+                  <div class="logo">
+                                <div class="logo-icon">ET</div>div>
+                                <div class="logo-text">E-Taxes <span>Protocol</span></div>div>
+                  </div>div>
+                <h1>Solicite Demo</h1>
+                <p class="subtitle">Sistema de seguimiento de devoluciones de IVA.<br>Agende una demostración personalizada.</p>p>
+                <a href="tel:4727371206" class="phone-box">
+                            <span class="phone-icon">📞</span>
+                            472 737 1206
+                </a>a>
+                <p class="footer">© 2026 E-Taxes Protocol. Todos los derechos reservados.</p>p>
+        </div>div>
+  </body>
+</html>html></h1></span>
+  </body>
+      </style></title>
+  </head>
